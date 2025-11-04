@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kraken Clicker</title>
+    <!-- Подключаем Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Дополнительные стили для кастомизации */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #111827; /* Темно-серый фон */
+            color: #e5e7eb; /* Светло-серый текст */
+        }
+        .click-target-container {
+            width: 300px; /* Фиксированная ширина */
+            height: 300px; /* Фиксированная высота */
+            border: 2px dashed #4b5563; /* Серая пунктирная рамка */
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #1f2937; /* Темно-серый фон */
+        }
+        .click-target-container img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            border-radius: 0.5rem;
+            cursor: pointer;
+        }
+        /* Стили для прокручиваемого списка дропа */
+        #dropListContainer {
+            max-height: 400px; /* Ограничение высоты */
+            overflow-y: auto; /* Включение вертикальной прокрутки */
+            background-color: #1f2937;
+            border-radius: 0.5rem;
+            padding: 8px;
+        }
+        /* Стили для скроллбара */
+        #dropListContainer::-webkit-scrollbar {
+            width: 8px;
+        }
+        #dropListContainer::-webkit-scrollbar-track {
+            background: #374151; /* Фон трека */
+            border-radius: 4px;
+        }
+        #dropListContainer::-webkit-scrollbar-thumb {
+            background: #6b7280; /* Цвет ползунка */
+            border-radius: 4px;
+        }
+        #dropListContainer::-webkit-scrollbar-thumb:hover {
+            background: #9ca3af; /* Цвет при наведении */
+        }
+        /* Стили для переключателей */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border-width: 0;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+    <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
+
+        <!-- Левая колонка: Кликер -->
+        <div class="md:col-span-2 bg-gray-900 p-6 rounded-lg shadow-lg">
+            <h1 class="text-3xl font-bold text-center mb-6 text-white">Kraken Clicker</h1>
+            
+            <!-- Загрузчик изображения -->
+            <div class="mb-4 text-center">
+                <label for="imageUploader" class="cursor-pointer bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200">
+                    Загрузить своё изображение
+                </label>
+                <input type="file" id="imageUploader" class="hidden" accept="image/*">
+            </div>
+
+            <!-- Зона для кликов -->
+            <div id="clickTarget" class="click-target-container mx-auto select-none transition-transform duration-75 active:scale-95">
+                <span class="text-gray-400">Загрузите изображение для кликов</span>
+            </div>
+            
+            <!-- Счетчик кликов -->
+            <div class="mt-6 text-center">
+                <p class="text-2xl font-bold text-white">
+                    <span id="clickCounter" class="text-cyan-400">0</span> / 1
+                </p>
+                <p class="text-sm text-gray-400">Кликов до убийства</p>
+            </div>
+        </div>
+
+        <!-- Правая колонка: Дроп -->
+        <div class="md:col-span-1 bg-gray-900 p-6 rounded-lg shadow-lg">
+            
+            <!-- Статистика -->
+            <div class="mb-6">
+                <h2 class="text-2xl font-bold text-center mb-4 text-white">Статистика</h2>
+                <div class="bg-gray-800 p-4 rounded-lg text-center">
+                    <p class="text-lg text-gray-300">Убито кракенов</p>
+                    <p id="casesOpened" class="text-4xl font-bold text-white">0</p>
+                </div>
+            </div>
+
+            <!-- Последний дроп -->
+            <div class="mb-6">
+                <h2 class="text-2xl font-bold text-center mb-4 text-white">Последний дроп</h2>
+                <div id="lastDrop" class="bg-gray-800 p-4 rounded-lg text-center min-h-[50px]">
+                    <p class="text-gray-400">Нажми 1 раз на кракена...</p>
+                </div>
+            </div>
+
+            <!-- История дропа -->
+            <div class="mb-6">
+                <h2 class="text-2xl font-bold text-center mb-4 text-white">История дропа</h2>
+                <div id="dropListContainer" class="bg-gray-800 p-2 rounded-lg min-h-[100px]">
+                    <ul id="dropList" class="divide-y divide-gray-700">
+                        <!-- Элементы дропа будут добавлены сюда -->
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Шансы -->
+            <div>
+                <h2 class="text-2xl font-bold text-center mb-4 text-white">Шансы выпадения</h2>
+                
+                <!-- Основные шансы -->
+                <div class="bg-gray-800 p-4 rounded-lg">
+                    <ul class="space-y-1 text-md">
+                        <li class="flex justify-between"><span>Book of Spirits</span> <span class="font-bold text-yellow-400">45%</span></li>
+                        <li class="flex justify-between"><span>Mysterious Book</span> <span class="font-bold text-yellow-400">15%</span></li>
+                        <li class="flex justify-between"><span>Kraken Cape</span> <span class="font-bold text-yellow-400">5%</span></li>
+                        <li class="flex justify-between"><span>Kraken Armor</span> <span class="font-bold text-red-500">1%</span></li>
+                        <li class="flex justify-between"><span>Kraken Blade</span> <span class="font-bold text-red-500">1%</span></li>
+                        <li class="flex justify-between"><span>Kraken Katana</span> <span class="font-bold text-red-500">1%</span></li>
+                        <li class="flex justify-between"><span>Kraken Core</span> <span class="font-bold text-red-500">1%</span></li>
+                        <li class="flex justify-between"><span>(Ничего)</span> <span class="font-bold text-gray-400">30%</span></li>
+                        
+                        <!-- Переключатель Great Kraken (100% Фрукт) -->
+                        <li class="flex justify-between items-center pt-2 mt-2 border-t border-gray-700">
+                            <div class_alias="flex flex-col">
+                                <span>Devil Fruit</span>
+                                <span class="text-xs text-green-400">(Вкл. 100% Фрукт)</span>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="toggleGreatKraken" class="sr-only peer">
+                                <div class="w-11 h-6 bg-gray-600 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+                            </label>
+                        </li>
+                        <li class="flex justify-between text-sm text-gray-400"><span>(Базовый шанс Fruit)</span> <span class="font-bold text-red-500">1%</span></li>
+                    </ul>
+
+                    <!-- Новая секция для шансов Фрукта -->
+                    <div class="mt-6 pt-4 border-t border-gray-600">
+                        <h3 class="text-xl font-semibold text-center mb-3">Шансы Devil Fruit</h3>
+                        
+                        <!-- Переключатели ASE и Logia -->
+                        <div class="flex flex-wrap justify-center gap-x-6 gap-y-2 mb-4">
+                            <!-- Переключатель ASE -->
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="toggleASE" class="sr-only peer">
+                                <div class="w-11 h-6 bg-gray-600 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-600"></div>
+                                <span class="ml-3 text-sm font-medium text-gray-300">ASE</span>
+                            </label>
+                            <!-- Переключатель 2x Logia -->
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="toggleLogia" class="sr-only peer">
+                                <div class="w-11 h-6 bg-gray-600 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-600"></div>
+                                <span class="ml-3 text-sm font-medium text-gray-300">2x Logia</span>
+                            </label>
+                        </div>
+                        
+                        <ul class="space-y-1 text-md">
+                            <li class="flex justify-between"><span>Common</span> <span id="fruitCommonChance" class="font-bold text-white">59.5%</span></li>
+                            <li class="flex justify-between"><span>Rare</span> <span id="fruitRareChance" class="font-bold text-blue-400">26%</span></li>
+                            <li class="flex justify-between"><span>Epic</span> <span id="fruitEpicChance" class="font-bold text-purple-400">10%</span></li>
+                            <li class="flex justify-between"><span>Legendary</span> <span id="fruitLegendaryChance" class="font-bold text-yellow-400">4%</span></li>
+                            <li class="flex justify-between"><span>Mythical</span> <span id="fruitMythicalChance" class="font-bold text-red-500">0.5%</span></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // DOM Элементы
+        const clickTarget = document.getElementById('clickTarget');
+        const imageUploader = document.getElementById('imageUploader');
+        const clickCounterEl = document.getElementById('clickCounter');
+        const casesOpenedEl = document.getElementById('casesOpened');
+        const lastDropEl = document.getElementById('lastDrop');
+        const dropList = document.getElementById('dropList');
+        const dropListContainer = document.getElementById('dropListContainer');
+
+        // Новые DOM элементы для переключателей и шансов
+        const toggleASE = document.getElementById('toggleASE');
+        const toggleLogia = document.getElementById('toggleLogia');
+        const toggleGreatKraken = document.getElementById('toggleGreatKraken');
+        const fruitCommonChanceEl = document.getElementById('fruitCommonChance');
+        const fruitRareChanceEl = document.getElementById('fruitRareChance');
+        const fruitEpicChanceEl = document.getElementById('fruitEpicChance');
+        const fruitLegendaryChanceEl = document.getElementById('fruitLegendaryChance');
+        const fruitMythicalChanceEl = document.getElementById('fruitMythicalChance');
+
+
+        // Состояние игры
+        let clickCount = 0;
+        let casesOpened = 0;
+        let lastDroppedItemName = null;
+        let lastDropListItem = null;
+        let lastDropCount = 0;
+
+        // Новое состояние для переключателей
+        let isASEActive = false;
+        let isLogiaActive = false;
+        let isGreatKrakenActive = false; 
+
+        // ===========================================
+        // СПИСКИ КОНКРЕТНЫХ ФРУКТОВ
+        // ===========================================
+        const fruitListsByRarity = {
+            Mythical: ["Tori", "Mochi", "Ope", "Venom", "Buddha", "Pteranodon"],
+            Legendary: ["Mera", "Pika", "Hie", "Magu", "Goro", "Gura", "Zushi", "Suna", "Ito", "Paw", "Kage", "Yami", "Goru", "Smoke"],
+            Epic: ["Yomi", "Spring", "Kira"],
+            Rare: ["Bari", "Mero", "Horo", "Gomu", "Bomu"],
+            Common: ["Suke", "Kilo", "Spin", "Heal"]
+        };
+
+        // Список наград (с добавлением 30% шанса "Ничего")
+        const rewards = [
+            { name: "Book of Spirits", chance: 45 },
+            { name: "Mysterious Book", chance: 15 },
+            { name: "Kraken Cape", chance: 5 },
+            { name: "Kraken Armor", chance: 1 },
+            { name: "Kraken Blade", chance: 1 },
+            { name: "Kraken Katana", chance: 1 },
+            { name: "Kraken Core", chance: 1 },
+            { name: "Devil Fruit", chance: 1 }, // Это запускает второй ролл
+            { name: "Ничего", chance: 30 } // 100 - (45+15+5+1+1+1+1+1) = 30
+        ];
+
+        // Шансы на РЕДКОСТЬ фрукта (возвращают "ключ" для fruitListsByRarity)
+        const fruitRarityChances = {
+            none: [
+                { name: "Common", chance: 59.5 },
+                { name: "Rare", chance: 26 },
+                { name: "Epic", chance: 10 },
+                { name: "Legendary", chance: 4 },
+                { name: "Mythical", chance: 0.5 }
+            ],
+            oneActive: [ // ASE *ИЛИ* Logia
+                { name: "Common", chance: 54 },
+                { name: "Rare", chance: 26 },
+                { name: "Epic", chance: 10 },
+                { name: "Legendary", chance: 8 },
+                { name: "Mythical", chance: 1 }
+            ],
+            bothActive: [ // ASE *И* Logia
+                { name: "Common", chance: 44 },
+                { name: "Rare", chance: 26 },
+                { name: "Epic", chance: 10 },
+                { name: "Legendary", chance: 16 },
+                { name: "Mythical", chance: 2 }
+            ]
+        };
+        
+        // Цвета для редкостей
+        const rarityColors = {
+            "default": "text-gray-300",
+            "Book of Spirits": "text-yellow-400",
+            "Mysterious Book": "text-yellow-400",
+            "Kraken Cape": "text-yellow-400",
+            "Kraken Armor": "text-red-500",
+            "Kraken Blade": "text-red-500",
+            "Kraken Katana": "text-red-500",
+            "Kraken Core": "text-red-500",
+            // Цвета для РЕДКОСТЕЙ фруктов
+            "Common": "text-white",
+            "Rare": "text-blue-400",
+            "Epic": "text-purple-400",
+            "Legendary": "text-yellow-400",
+            "Mythical": "text-red-500"
+        };
+        
+        // Новая функция для получения редкости ИМЕНИ фрукта
+        function getRarityByFruitName(fruitName) {
+            for (const rarity in fruitListsByRarity) {
+                if (fruitListsByRarity[rarity].includes(fruitName)) {
+                    return rarity; // "Mythical", "Legendary" и т.д.
+                }
+            }
+            return null; // Для предметов типа "Kraken Armor"
+        }
+
+        // Функция для получения цвета
+        function getColorForItem(itemName) {
+            // Сначала проверяем обычные предметы
+            if (rarityColors[itemName]) {
+                return rarityColors[itemName];
+            }
+            //_Теперь_ проверяем, фрукт ли это
+            const rarity = getRarityByFruitName(itemName); // e.g., "Legendary"
+            if (rarity && rarityColors[rarity]) {
+                return rarityColors[rarity]; // e.g., "text-yellow-400"
+            }
+            // Цвет по умолчанию
+            return rarityColors["default"];
+        }
+
+        // Функция для получения СЛУЧАЙНОГО КОНКРЕТНОГО ФРУКТА
+        function getFruitRarity() {
+            let currentChances;
+
+            // 1. Определяем, какой набор шансов РЕДКОСТИ использовать
+            if (isASEActive && isLogiaActive) {
+                currentChances = fruitRarityChances.bothActive;
+            } else if (isASEActive || isLogiaActive) {
+                currentChances = fruitRarityChances.oneActive;
+            } else {
+                currentChances = fruitRarityChances.none;
+            }
+
+            // 2. Роллим РЕДКОСТЬ
+            const rand = Math.random() * 100;
+            let cumulativeChance = 0;
+            let chosenRarity = "Common"; // По умолчанию Common
+
+            for (const item of currentChances) {
+                cumulativeChance += item.chance;
+                if (rand < cumulativeChance) {
+                    chosenRarity = item.name; // "Mythical", "Legendary", "Epic" и т.д.
+                    break;
+                }
+            }
+
+            // 3. Выбираем СЛУЧАЙНЫЙ фрукт из этой редкости
+            const fruitList = fruitListsByRarity[chosenRarity];
+            const randomIndex = Math.floor(Math.random() * fruitList.length);
+            return fruitList[randomIndex]; // "Pika", "Tori", "Spin" и т.д.
+        }
+
+        // Функция для получения случайной награды
+        function getRandomReward() {
+            // НОВАЯ ПРОВЕРКА: Если Great Kraken включен, шанс на фрукт 100%
+            if (isGreatKrakenActive) {
+                return getFruitRarity(); // Сразу получаем фрукт
+            }
+
+            const rand = Math.random() * 100;
+            let cumulativeChance = 0;
+
+            for (const item of rewards) {
+                cumulativeChance += item.chance;
+                if (rand < cumulativeChance) {
+                    // Если это Devil Fruit, запускаем второй ролл
+                    if (item.name === "Devil Fruit") {
+                        return getFruitRarity(); // Получаем КОНКРЕТНЫЙ фрукт
+                    }
+                    return item.name; // "Kraken Armor", "Ничего" и т.д.
+                }
+            }
+            // На всякий случай, если что-то пойдет не так
+            return "Ничего";
+        }
+
+        // Новая функция для обновления UI шансов
+        function updateFruitChanceUI() {
+            if (isASEActive && isLogiaActive) {
+                // Оба включены
+                fruitCommonChanceEl.textContent = "44%";
+                fruitRareChanceEl.textContent = "26%";
+                fruitEpicChanceEl.textContent = "10%";
+                fruitLegendaryChanceEl.textContent = "16%";
+                fruitMythicalChanceEl.textContent = "2%";
+            } else if (isASEActive || isLogiaActive) {
+                // Один включен
+                fruitCommonChanceEl.textContent = "54%";
+                fruitRareChanceEl.textContent = "26%";
+                fruitEpicChanceEl.textContent = "10%";
+                fruitLegendaryChanceEl.textContent = "8%";
+                fruitMythicalChanceEl.textContent = "1%";
+            } else {
+                // Оба выключены
+                fruitCommonChanceEl.textContent = "59.5%";
+                fruitRareChanceEl.textContent = "26%";
+                fruitEpicChanceEl.textContent = "10%";
+                fruitLegendaryChanceEl.textContent = "4%";
+                fruitMythicalChanceEl.textContent = "0.5%";
+            }
+        }
+
+        // Обработчик загрузки изображения
+        imageUploader.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    clickTarget.innerHTML = ''; // Очищаем плейсхолдер
+                    clickTarget.appendChild(img);
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Функция для отображения награды
+        function displayReward(itemName) {
+            const color = getColorForItem(itemName);
+            
+            // Обновляем "Последний дроп"
+            lastDropEl.innerHTML = `<p class="font-bold ${color}">${itemName}</p>`;
+
+            // Добавляем в историю, только если это не "Ничего"
+            if (itemName !== "Ничего") {
+                // Проверяем, совпадает ли с последним дропом
+                if (lastDroppedItemName === itemName && lastDropListItem) {
+                    // Увеличиваем счетчик
+                    lastDropCount++;
+                    lastDropListItem.innerHTML = `<span class="${color}">${itemName}</span> <span class="text-gray-400 text-sm">x${lastDropCount}</span>`;
+                } else {
+                    // Сбрасываем счетчик и создаем новый элемент
+                    lastDroppedItemName = itemName;
+                    lastDropCount = 1;
+                    
+                    const listItem = document.createElement('li');
+                    listItem.className = `p-2 ${color} font-semibold flex justify-between`;
+                    listItem.innerHTML = `<span>${itemName}</span>`;
+                    
+                    // Используем prepend для добавления в начало
+                    dropList.prepend(listItem);
+                    
+                    // Сохраняем ссылку на этот элемент
+                    lastDropListItem = listItem;
+                }
+                
+                // Прокручиваем контейнер вверх
+                dropListContainer.scrollTop = 0;
+            }
+        }
+
+        // Обработчик кликов
+        clickTarget.addEventListener('click', () => {
+            // Проверяем, загружено ли изображение
+            if (!clickTarget.querySelector('img')) {
+                lastDropEl.innerHTML = `<p class="font-bold text-red-500">Сначала загрузите изображение!</p>`;
+                return; // Не даем кликать
+            }
+            
+            clickCount++;
+
+            // Проверка на "убийство"
+            if (clickCount >= 1) { // Установлено на 1
+                // Получаем награду
+                const reward = getRandomReward();
+                
+                // Отображаем награду
+                displayReward(reward);
+                
+                // Увеличиваем счетчик кейсов
+                casesOpened++;
+                casesOpenedEl.textContent = casesOpened;
+                
+                // Сбрасываем клики
+                clickCount = 0;
+            }
+
+            // Обновляем счетчик кликов
+            clickCounterEl.textContent = clickCount;
+        });
+
+        // НОВЫЕ ОБРАБОТЧИКИ для переключателей
+        toggleASE.addEventListener('change', (event) => {
+            isASEActive = event.target.checked;
+            updateFruitChanceUI(); // Обновляем текст шансов
+        });
+
+        toggleLogia.addEventListener('change', (event) => {
+            isLogiaActive = event.target.checked;
+            updateFruitChanceUI(); // Обновляем текст шансов
+        });
+
+        // НОВЫЙ ОБРАБОТЧИК
+        toggleGreatKraken.addEventListener('change', (event) => {
+            isGreatKrakenActive = event.target.checked;
+        });
+
+    </script>
+
+</body>
+</html>
+
+
