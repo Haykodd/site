@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Mode Clicker</title>
+    <!-- ИСПРАВЛЕННАЯ ССЫЛКА -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Подключаем Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        // Auth и Firestore
+        // ИСПРАВЛЕНИЕ: Устранена синтаксическая ошибка в импорте
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        // Realtime Database (RTDB) для отслеживания присутствия
+        import { getDatabase, ref, onValue, set, onDisconnect } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
+
+        // ИСПРАВЛЕНИЕ: Ждем, пока HTML не загрузится, прежде чем запускать JS
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // --- Глобальная конфигурация Firebase ---
+            // ИСПРАВЛЕНИЕ: Возвращаем код к использованию __firebase_config и __app_id, 
+            // которые предоставляются этой средой, чтобы исправить ошибку API-ключа.
+            const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+            // Очищаем appId для RTDB (удаляем недопустимые символы .#$[])
+            const rtdbAppId = appId.replace(/[.#$\[\]]/g, '_');
+
+
+            // Инициализация Firebase
+            const app = initializeApp(firebaseConfig);
+            const auth = getAuth(app);
+            const db = getFirestore(app);
+            const rtdb = getDatabase(app);
+
+            // --- DOM Элементы ---
+            const activeUsersSelectorEl = document.getElementById('activeUsersSelector');
+
+            // --- Логика Аутентификации и Присутствия ---
+            onAuthStateChanged(auth, async (user) => {
+                let userId;
+                if (user) {
+                    userId = user.uid;
+                } else {
+                    try {
+                        // ИСПРАВЛЕНИЕ: Возвращаем правильный метод входа для этой среды.
+                        const userCredential = typeof __initial_auth_token !== 'undefined'
+                            ? await signInWithCustomToken(auth, __initial_auth_token)
+                            : await signInAnonymously(auth);
+                        userId = userCredential.user.uid;
+                    } catch (error) {
+                        console.error("Ошибка входа: ", error);
+                        userId = 'guest-' + crypto.randomUUID();
+                    }
+                }
+
+                // --- ЛОГИКА СЧЕТЧИКА АКТИВНЫХ ПОЛЬЗОВАТЕЛЕЙ ---
+                if (userId && activeUsersSelectorEl) {
+
+                    const userPresenceRef = ref(rtdb, `/artifacts/${rtdbAppId}/public/data/presence/${userId}`);
+                    const presenceCollectionRef = ref(rtdb, `/artifacts/${rtdbAppId}/public/data/presence`);
+
+                    // 1. Устанавливаем, что пользователь онлайн
+                    set(userPresenceRef, true)
+                        .catch((err) => console.error("Не удалось установить присутствие:", err));
+
+                    // 2. Устанавливаем действие "при отключении"
+                    onDisconnect(userPresenceRef).remove()
+                        .catch((err) => console.error("Не удалось установить onDisconnect:", err));
+
+                    // 3. Слушаем изменения в общем количестве пользователей
+                    onValue(presenceCollectionRef, (snapshot) => {
+                        const count = snapshot.size; // Используем .size
+                        if (activeUsersSelectorEl) {
+                            activeUsersSelectorEl.textContent = count;
+                        }
+                    });
+                }
+                // --- КОНЕЦ ЛОГИКИ СЧЕТЧIKA ---
+            });
+
+
+            // --- Остальной код игры (из "исходной точки") ---
+            // ... (весь остальной JS код остается без изменений) ...
+
+            // --- ЭЛЕМЕНТЫ DOM (Игра) ---
+            const modeSelector = document.getElementById('modeSelector');
+            const gameContainer = document.getElementById('gameContainer');
+            const clickerTitle = document.getElementById('clickerTitle');
+            const killCountLabel = document.getElementById('killCountLabel');
+
+            // Выбор режима
+            const selectKraken = document.getElementById('selectKraken');
+            const selectBaal = document.getElementById('selectBaal');
+            const selectJuzo = document.getElementById('selectJuzo');
+            const selectHawkEye = document.getElementById('selectHawkEye');
+            const selectRoger = document.getElementById('selectRoger');
+            const selectLaw = document.getElementById('selectLaw');
+            const selectGravito = document.getElementById('selectGravito');
+            const resetModeButton = document.getElementById('resetMode');
+
+            // Кликер
+            const imageUpload = document.getElementById('imageUpload');
+            const clickTarget = document.getElementById('clickTarget');
+            const clickCountDisplay = document.getElementById('clickCountDisplay');
+
+            // Блоки шансов
+            const chancesContainer = document.getElementById('chancesContainer');
+            const krakenChances = document.getElementById('krakenChances');
+            const baalChances = document.getElementById('baalChances');
+            const juzoChances = document.getElementById('juzoChances');
+            const hawkEyeChances = document.getElementById('hawkEyeChances');
+            const rogerChances = document.getElementById('rogerChances');
+            const lawChances = document.getElementById('lawChances');
+            const gravitoChances = document.getElementById('gravitoChances');
+            const fruitChancesContainer = document.getElementById('fruitChancesContainer');
+            const fruitCollectionContainer = document.getElementById('fruitCollectionContainer');
+
+            // Статистика
+            const killCountEl = document.getElementById('killCount');
+            const lastDropDisplay = document.getElementById('lastDropDisplay');
+            const dropList = document.getElementById('dropList');
+            const fruitCollectionList = document.getElementById('fruitCollectionList');
+
+            // Переключатели
+            const toggleASE = document.getElementById('toggleASE');
+            const toggleLogia = document.getElementById('toggleLogia');
+            const toggleGreatKraken = document.getElementById('toggleGreatKraken');
+            const toggle2xDrop = document.getElementById('toggle2xDrop');
+
+            // Текст шансов фруктов
+            const chanceCommon = document.getElementById('chanceCommon');
+            const chanceRare = document.getElementById('chanceRare');
+            const chanceEpic = document.getElementById('chanceEpic');
+            const chanceLegendary = document.getElementById('chanceLegendary');
+            const chanceMythical = document.getElementById('chanceMythical');
+
+
+            // --- СОСТОЯНИЕ ИГРЫ ---
+            let clickCount = 0;
+            let killCount = 0;
+            let currentMode = ''; // 'kraken', 'baal', 'juzo', 'hawkEye', 'roger', 'law', 'gravito'
+            const CLICKS_PER_KILL = 1;
+
+            let lastDroppedItemName = null;
+            let lastDropListItem = null;
+            let lastDropCount = 1;
+
+            let isASEActive = false;
+            let isLogiaActive = false;
+            let isGreatKrakenActive = false;
+            let is2xDropActive = false;
+
+            let fruitCollection = {}; // { "Pika": 2, "Tori": 1 }
+
+            // --- БАЗЫ ДАННЫХ ДРОПА ---
+            const krakenRewards = [
+                { name: "Mysterious Book", chance: 15, color: "text-gray-400" },
+                { name: "Book of Spirits", chance: 45, color: "text-green-400" },
+                { name: "Kraken Armor", chance: 1, color: "text-red-500" },
+                { name: "Kraken Cape", chance: 5, color: "text-yellow-400" },
+                { name: "Kraken Blade", chance: 1, color: "text-red-500" },
+                { name: "Kraken Katana", chance: 1, color: "text-red-500" },
+                { name: "Kraken Core", chance: 1, color: "text-red-500" },
+                { name: "DEVIL_FRUIT", chance: 1, color: "text-purple-400" },
+                { name: "Ничего", chance: 30, color: "text-gray-500" },
+            ];
+            const baalRewards = [
+                { name: "True Ba'al's Guard", chance: 2, color: "text-yellow-400" },
+                { name: "Hollow's Great Sword", chance: 2, color: "text-yellow-400" },
+                { name: "True Ba'al's Snake Head", chance: 5, color: "text-yellow-400" },
+                { name: "True Ba'al's Snake Fire", chance: 20, color: "text-purple-400" },
+                { name: "True Ba'al's Horns", chance: 5, color: "text-yellow-400" },
+                { name: "Hollow's World Ender", chance: 1, color: "text-red-500" },
+                { name: "Prestige World Ender", chance: 0.001, color: "text-red-500" },
+                { name: "Endbringer Wings", chance: 1, color: "text-red-500" },
+                { name: "Endbringer Armor", chance: 1, color: "text-red-500" },
+                { name: "Ничего", chance: 62.999, color: "text-gray-500" },
+            ];
+            const juzoRewards = [
+                { name: "Kira Kira no Mi", chance: 5, color: "text-yellow-400" },
+                { name: "Turtleback Helmet", chance: 1, color: "text-red-500" },
+                { name: "Turtleback Armor", chance: 1, color: "text-red-500" },
+                { name: "Mythical Fruit Chest", chance: 0.5, color: "text-red-500" },
+                { name: "Ничего", chance: 92.5, color: "text-gray-500" },
+            ];
+            const hawkEyeRewards = [
+                { name: "Mihawk's hat", chance: 1, color: "text-red-500" },
+                { name: "Hawk Eye's Outfit", chance: 1, color: "text-red-500" },
+                { name: "Triple Strongest Slash Scroll", chance: 1, color: "text-red-500" },
+                { name: "Dark Blade", chance: 0.5, color: "text-red-500" },
+                { name: "Legendary fruit chest blue-print", chance: 1, color: "text-yellow-400" },
+                { name: "Ничего", chance: 95.5, color: "text-gray-500" },
+            ];
+            const rogerRewards = [
+                { name: "Legendary Fruit Chest Blueprint", chance: 1, color: "text-yellow-400" },
+                { name: "Roger's Hat", chance: 1, color: "text-yellow-400" },
+                { name: "Roger's Outfit", chance: 1, color: "text-yellow-400" },
+                { name: "Roger's Ace", chance: 0.5, color: "text-red-500" },
+                { name: "Ничего", chance: 96.5, color: "text-gray-500" },
+            ];
+            const lawRewards = [
+                { name: "Law's Cap", chance: 5, color: "text-green-400" },
+                { name: "Law's Outfit", chance: 15, color: "text-green-400" },
+                { name: "Law's Cape", chance: 15, color: "text-green-400" },
+                { name: "Ope Scramble", chance: 1, color: "text-red-500" },
+                { name: "Kikoku", chance: 0.5, color: "text-red-500" },
+                { name: "Ничего", chance: 63.5, color: "text-gray-500" },
+            ];
+            const gravitoRewards = [
+                { name: "Gravito's Cape", chance: 35, color: "text-green-400" },
+                { name: "Gravity Blade", chance: 15, color: "text-blue-400" },
+                { name: "Hoverboard", chance: 1, color: "text-red-500" },
+                { name: "Meteor Strike", chance: 1, color: "text-red-500" },
+                { name: "Ничего", chance: 48, color: "text-gray-500" },
+            ];
+
+            const fruitListsByRarity = {
+                Common: ["Suke", "Kilo", "Spin", "Heal"],
+                Rare: ["Bari", "Mero", "Horo", "Gomu", "Bomu"],
+                Epic: ["Yomi", "Spring", "Kira"],
+                Legendary: ["Mera", "Pika", "Hie", "Magu", "Goro", "Gura", "Zushi", "Suna", "Ito", "Paw", "Kage", "Yami", "Goru", "Smoke"],
+                Mythical: ["Tori", "Mochi", "Ope", "Venom", "Buddha", "Pteranodon"]
+            };
+            const fruitRarityChances = {
+                none: [
+                    { name: "Common", chance: 59.5, color: "text-gray-300" },
+                    { name: "Rare", chance: 26, color: "text-blue-400" },
+                    { name: "Epic", chance: 10, color: "text-purple-400" },
+                    { name: "Legendary", chance: 4, color: "text-yellow-400" },
+                    { name: "Mythical", chance: 0.5, color: "text-red-500" }
+                ],
+                oneActive: [ // ASE или 2x Logia
+                    { name: "Common", chance: 54, color: "text-gray-300" },
+                    { name: "Rare", chance: 26, color: "text-blue-400" },
+                    { name: "Epic", chance: 10, color: "text-purple-400" },
+                    { name: "Legendary", chance: 8, color: "text-yellow-400" },
+                    { name: "Mythical", chance: 1, color: "text-red-500" }
+                ],
+                bothActive: [ // ASE и 2x Logia
+                    { name: "Common", chance: 44, color: "text-gray-300" },
+                    { name: "Rare", chance: 26, color: "text-blue-400" },
+                    { name: "Epic", chance: 10, color: "text-purple-400" },
+                    { name: "Legendary", chance: 16, color: "text-yellow-400" },
+                    { name: "Mythical", chance: 2, color: "text-red-500" }
+                ]
+            };
+
+
+            // --- ЛОГИКА ИГРЫ ---
+            function setGameMode(mode) {
+                currentMode = mode;
+                modeSelector.classList.add('hidden');
+                gameContainer.classList.remove('hidden');
+                [krakenChances, baalChances, juzoChances, hawkEyeChances, rogerChances, lawChances, gravitoChances, fruitChancesContainer, fruitCollectionContainer].forEach(el => el.classList.add('hidden'));
+
+                if (mode === 'kraken') {
+                    clickerTitle.textContent = 'Kraken Clicker';
+                    killCountLabel.textContent = 'Убито Кракенов:';
+                    krakenChances.classList.remove('hidden');
+                    fruitChancesContainer.classList.remove('hidden');
+                    fruitCollectionContainer.classList.remove('hidden');
+                } else if (mode === 'baal') {
+                    clickerTitle.textContent = 'True Ba\'al Clicker';
+                    killCountLabel.textContent = 'Убито Баалов:';
+                    baalChances.classList.remove('hidden');
+                } else if (mode === 'juzo') {
+                    clickerTitle.textContent = 'Juzo Clicker';
+                    killCountLabel.textContent = 'Убито Juzo:';
+                    juzoChances.classList.remove('hidden');
+                } else if (mode === 'hawkEye') {
+                    clickerTitle.textContent = 'Hawk Eye Clicker';
+                    killCountLabel.textContent = 'Убито Hawk Eye:';
+                    hawkEyeChances.classList.remove('hidden');
+                } else if (mode === 'roger') {
+                    clickerTitle.textContent = 'Roger Clicker';
+                    killCountLabel.textContent = 'Убито Roger:';
+                    rogerChances.classList.remove('hidden');
+                } else if (mode === 'law') {
+                    clickerTitle.textContent = 'Law Clicker';
+                    killCountLabel.textContent = 'Убито Law:';
+                    lawChances.classList.remove('hidden');
+                } else if (mode === 'gravito') {
+                    clickerTitle.textContent = 'Gravito Clicker';
+                    killCountLabel.textContent = 'Убито Gravito:';
+                    gravitoChances.classList.remove('hidden');
+                }
+                resetGame();
+            }
+
+            function resetGame() {
+                clickCount = 0;
+                killCount = 0;
+                lastDroppedItemName = null;
+                lastDropListItem = null;
+                lastDropCount = 1;
+                fruitCollection = {};
+                clickCountDisplay.textContent = `0 / ${CLICKS_PER_KILL}`;
+                killCountEl.textContent = '0';
+                lastDropDisplay.textContent = `Нажми ${CLICKS_PER_KILL} раз, чтобы убить...`;
+                dropList.innerHTML = '';
+                fruitCollectionList.innerHTML = '';
+                toggleASE.checked = false;
+                toggleLogia.checked = false;
+                toggleGreatKraken.checked = false;
+                toggle2xDrop.checked = false;
+                isASEActive = false;
+                isLogiaActive = false;
+                isGreatKrakenActive = false;
+                is2xDropActive = false;
+                updateAllChanceUI();
+            }
+
+            function getRewardFromList(rewardsList) {
+                let chances = [...rewardsList];
+                if (is2xDropActive) {
+                    let doubledChances = chances.map(item => {
+                        if (item.name === "Ничего") return { ...item };
+                        return { ...item, chance: item.chance * 2 };
+                    });
+                    const totalChance = doubledChances.reduce((acc, item) => item.name !== "Ничего" ? acc + item.chance : acc, 0);
+                    const nothingChance = Math.max(0, 100 - totalChance);
+                    const nothingItem = doubledChances.find(item => item.name === "Ничего");
+                    if (nothingItem) nothingItem.chance = nothingChance;
+                    chances = doubledChances;
+                }
+                const totalWeight = chances.reduce((acc, reward) => acc + reward.chance, 0);
+                let random = Math.random() * totalWeight;
+                for (const reward of chances) {
+                    if (random < reward.chance) return reward;
+                    random -= reward.chance;
+                }
+            }
+
+            function getKrakenReward() {
+                if (isGreatKrakenActive) return getFruitRarity();
+                const reward = getRewardFromList(krakenRewards);
+                if (reward.name === "DEVIL_FRUIT") return getFruitRarity();
+                return reward;
+            }
+            function getBaalReward() { return getRewardFromList(baalRewards); }
+            function getJuzoReward() { return getRewardFromList(juzoRewards); }
+            function getHawkEyeReward() { return getRewardFromList(hawkEyeRewards); }
+            function getRogerReward() { return getRewardFromList(rogerRewards); }
+            function getLawReward() { return getRewardFromList(lawRewards); }
+            function getGravitoReward() { return getRewardFromList(gravitoRewards); }
+
+            function getFruitRarity() {
+                let currentChancesKey = 'none';
+                if (isASEActive && isLogiaActive) currentChancesKey = 'bothActive';
+                else if (isASEActive || isLogiaActive) currentChancesKey = 'oneActive';
+                let chancesList = fruitRarityChances[currentChancesKey];
+
+                if (is2xDropActive) {
+                    let doubledChances = chancesList.map(item => ({ ...item, chance: item.chance * 2 }));
+                    const totalChance = doubledChances.reduce((acc, item) => acc + item.chance, 0);
+                    if (totalChance > 100) {
+                        const scaleFactor = 100 / totalChance;
+                        doubledChances = doubledChances.map(item => ({ ...item, chance: item.chance * scaleFactor }));
+                    } else {
+                        const diff = 100 - totalChance;
+                        const commonItem = doubledChances.find(item => item.name === "Common");
+                        if (commonItem) commonItem.chance += diff;
+                    }
+                    chancesList = doubledChances;
+                }
+                const rarity = getRewardFromList(chancesList);
+                const fruitList = fruitListsByRarity[rarity.name];
+                const randomFruit = fruitList[Math.floor(Math.random() * fruitList.length)];
+                return { name: randomFruit, color: rarity.color, rarity: rarity.name };
+            }
+
+            function getRarityByFruitName(fruitName) {
+                for (const rarity in fruitListsByRarity) {
+                    if (fruitListsByRarity[rarity].includes(fruitName)) return rarity;
+                }
+                return null;
+            }
+            function getColorForItem(itemName) {
+                const rarity = getRarityByFruitName(itemName);
+                if (rarity) return fruitRarityChances.none.find(r => r.name === rarity).color || 'text-gray-300';
+                return 'text-gray-300';
+            }
+
+            function updateAllChanceUI() {
+                const multiplier = is2xDropActive ? 2 : 1;
+                let total = 0;
+                // --- 1. Kraken ---
+                total = 0;
+                document.getElementById('chance-k-book').textContent = (15 * multiplier).toFixed(1); total += 15 * multiplier;
+                document.getElementById('chance-k-spirits').textContent = (45 * multiplier).toFixed(1); total += 45 * multiplier;
+                document.getElementById('chance-k-armor').textContent = (1 * multiplier).toFixed(1); total += 1 * multiplier;
+                document.getElementById('chance-k-cape').textContent = (5 * multiplier).toFixed(1); total += 5 * multiplier;
+                document.getElementById('chance-k-blade').textContent = (1 * multiplier).toFixed(1); total += 1 * multiplier;
+                document.getElementById('chance-k-katana').textContent = (1 * multiplier).toFixed(1); total += 1 * multiplier;
+                document.getElementById('chance-k-core').textContent = (1 * multiplier).toFixed(1); total += 1 * multiplier;
+                document.getElementById('chance-k-fruit').textContent = (1 * multiplier).toFixed(1); total += 1 * multiplier;
+                document.getElementById('chance-k-nothing').textContent = Math.max(0, 100 - total).toFixed(1);
+                // --- 2. Ba'al ---
+                total = 0;
+                document.getElementById('chance-b-guard').textContent = (2 * multiplier).toFixed(1); total += 2 * multiplier;
+                document.getElementById('chance-b-sword').textContent = (2 * multiplier).toFixed(1); total += 2 * multiplier;
+                document.getElementById('chance-b-head').textContent = (5 * multiplier).toFixed(1); total += 5 * multiplier;
+                document.getElementById('chance-b-fire').textContent = (20 * multiplier).toFixed(1); total += 20 * multiplier;
+                document.getElementById('chance-b-horns').textContent = (5 * multiplier).toFixed(1); total += 5 * multiplier;
+                document.getElementById('chance-b-worldender').textContent = (1 * multiplier).toFixed(1); total += 1 * multiplier;
+                document.getElementById('chance-b-prestige').textContent = (0.001 * multiplier).toFixed(3); total += 0.001 * multiplier;
+                document.getElementById('chance-b-wings').textContent = (1 * multiplier).toFixed(1); total += 1 * multiplier;
+                document.getElementById('chance-b-armor').textContent = (1 * multiplier).toFixed(1); total += 1 * multiplier;
+                document.getElementById('chance-b-nothing').textContent = Math.max(0, 100 - total).toFixed(3);
+                // --- 3. Juzo ---
+                total = 0;
+                document.getElementById('chance-j-kira').textContent = (5 * multiplier).toFixed(1); total += 5 * multiplier;
+                document.getElementById('chance-j-helmet').textContent = (1 * multiplier).toFixed(1); total += 1 * multiplier;
+                document.getElementById('chance-j-armor').textContent = (1 * multiplier).toFixed(1); total += 1 * multiplier;
+                document.getElementById('chance-j-chest').textContent = (0.5 * multiplier).toFixed(1); total += 0.5 * multiplier;
+                document.getElementById('chance-j-nothing').textContent = Math.max(0, 100 - total).toFixed(1);
+                // --- 4. Hawk Eye ---
+                total = 0;
+                document.getElementById('chance-h-hat').textContent = (1 * multiplier).toFixed(1); total += 1 * multiplier;
+                document.getElementById('chance-h-outfit').textContent = (1 * multiplier).toFixed(1); total += 1 * multiplier;
+                document.getElementById('chance-h-scroll').textContent = (1 * multiplier).toFixed(1); total += 1 * multiplier;
+                document.getElementById('chance-h-blade').textContent = (0.5 * multiplier).toFixed(1); total += 0.5 * multiplier;
+                document.getElementById('chance-h-blueprint').textContent = (1 * multiplier).toFixed(1); total += 1 * multiplier;
+                document.getElementById('chance-h-nothing').textContent = Math.max(0, 100 - total).toFixed(1);
+                // --- 5. Roger ---
+                total = 0;
+                document.getElementById('chance-r-blueprint').textContent = (1 * multiplier).toFixed(1); total += 1 * multiplier;
+                document.getElementById('chance-r-hat').textContent = (1 * multiplier).toFixed(1); total += 1 * multiplier;
+                document.getElementById('chance-r-outfit').textContent = (1 * multiplier).toFixed(1); total += 1 * multiplier;
+                document.getElementById('chance-r-ace').textContent = (0.5 * multiplier).toFixed(1); total += 0.5 * multiplier;
+                document.getElementById('chance-r-nothing').textContent = Math.max(0, 100 - total).toFixed(1);
+                // --- 6. Law ---
+                total = 0;
+                document.getElementById('chance-l-cap').textContent = (5 * multiplier).toFixed(1); total += 5 * multiplier;
+                document.getElementById('chance-l-outfit').textContent = (15 * multiplier).toFixed(1); total += 15 * multiplier;
+                document.getElementById('chance-l-cape').textContent = (15 * multiplier).toFixed(1); total += 15 * multiplier;
+                document.getElementById('chance-l-ope').textContent = (1 * multiplier).toFixed(1); total += 1 * multiplier;
+                document.getElementById('chance-l-kikoku').textContent = (0.5 * multiplier).toFixed(1); total += 0.5 * multiplier;
+                document.getElementById('chance-l-nothing').textContent = Math.max(0, 100 - total).toFixed(1);
+                // --- 7. Gravito ---
+                total = 0;
+                document.getElementById('chance-g-cape').textContent = (35 * multiplier).toFixed(1); total += 35 * multiplier;
+                document.getElementById('chance-g-blade').textContent = (15 * multiplier).toFixed(1); total += 15 * multiplier;
+                document.getElementById('chance-g-hoverboard').textContent = (1 * multiplier).toFixed(1); total += 1 * multiplier;
+                document.getElementById('chance-g-meteor').textContent = (1 * multiplier).toFixed(1); total += 1 * multiplier;
+                document.getElementById('chance-g-nothing').textContent = Math.max(0, 100 - total).toFixed(1);
+                // --- 8. Фрукты ---
+                let chancesKey = 'none';
+                if (isASEActive && isLogiaActive) chancesKey = 'bothActive';
+                else if (isASEActive || isLogiaActive) chancesKey = 'oneActive';
+                let chancesList = fruitRarityChances[chancesKey];
+                if (is2xDropActive) {
+                    let doubledChances = chancesList.map(item => ({ ...item, chance: item.chance * 2 }));
+                    const totalChance = doubledChances.reduce((acc, item) => acc + item.chance, 0);
+                    if (totalChance > 100) {
+                        const scaleFactor = 100 / totalChance;
+                        doubledChances = doubledChances.map(item => ({ ...item, chance: item.chance * scaleFactor }));
+                    } else {
+                        const diff = 100 - totalChance;
+                        const commonItem = doubledChances.find(item => item.name === "Common");
+                        if (commonItem) commonItem.chance += diff;
+                    }
+                    chancesList = doubledChances;
+                }
+                chanceCommon.textContent = chancesList.find(r => r.name === "Common").chance.toFixed(1);
+                chanceRare.textContent = chancesList.find(r => r.name === "Rare").chance.toFixed(1);
+                chanceEpic.textContent = chancesList.find(r => r.name === "Epic").chance.toFixed(1);
+                chanceLegendary.textContent = chancesList.find(r => r.name === "Legendary").chance.toFixed(1);
+                chanceMythical.textContent = chancesList.find(r => r.name === "Mythical").chance.toFixed(1);
+            }
+
+            function displayReward(reward) {
+                if (!reward || reward.name === "Ничего") {
+                    lastDropDisplay.textContent = "Ничего";
+                    lastDropDisplay.className = "text-center text-gray-500 text-lg p-4 bg-gray-900 rounded-lg min-h-[60px] flex items-center justify-center";
+                    lastDroppedItemName = "Ничего";
+                    return;
+                }
+                lastDropDisplay.textContent = reward.name;
+                lastDropDisplay.className = `text-center text-lg p-4 bg-gray-900 rounded-lg min-h-[60px] flex items-center justify-center font-bold ${reward.color}`;
+                if (reward.name === lastDroppedItemName && lastDropListItem) {
+                    lastDropCount++;
+                    lastDropListItem.querySelector('span').textContent = `x${lastDropCount}`;
+                } else {
+                    lastDropCount = 1;
+                    lastDroppedItemName = reward.name;
+                    const li = document.createElement('li');
+                    li.className = `flex justify-between items-center ${reward.color} font-medium`;
+                    const nameEl = document.createElement('p');
+                    nameEl.textContent = reward.name;
+                    li.appendChild(nameEl);
+                    const countEl = document.createElement('span');
+                    countEl.className = "text-sm text-gray-400";
+                    li.appendChild(countEl);
+                    dropList.prepend(li);
+                    lastDropListItem = li;
+                }
+                if (currentMode === 'kraken' && getRarityByFruitName(reward.name)) {
+                    fruitCollection[reward.name] = (fruitCollection[reward.name] || 0) + 1;
+                    const count = fruitCollection[reward.name];
+                    const fruitId = `fruit-${reward.name}`;
+                    let fruitLi = document.getElementById(fruitId);
+                    if (fruitLi) {
+                        fruitLi.querySelector('span').textContent = `x${count}`;
+                    } else {
+                        fruitLi = document.createElement('li');
+                        fruitLi.id = fruitId;
+                        fruitLi.className = `flex justify-between items-center ${getColorForItem(reward.name)} font-medium`;
+                        const nameEl = document.createElement('p');
+                        nameEl.textContent = reward.name;
+                        fruitLi.appendChild(nameEl);
+                        const countEl = document.createElement('span');
+                        countEl.className = "text-lg font-bold";
+                        countEl.textContent = `x${count}`;
+                        fruitLi.appendChild(countEl);
+                        fruitCollectionList.appendChild(fruitLi);
+                    }
+                }
+            }
+
+            clickTarget.addEventListener('click', () => {
+                clickCount++;
+                clickCountDisplay.textContent = `${clickCount} / ${CLICKS_PER_KILL}`;
+                if (clickCount >= CLICKS_PER_KILL) {
+                    clickCount = 0;
+                    clickCountDisplay.textContent = `0 / ${CLICKS_PER_KILL}`;
+                    killCount++;
+                    killCountEl.textContent = killCount;
+                    let reward1;
+                    if (currentMode === 'kraken') reward1 = getKrakenReward();
+                    else if (currentMode === 'baal') reward1 = getBaalReward();
+                    else if (currentMode === 'juzo') reward1 = getJuzoReward();
+                    else if (currentMode === 'hawkEye') reward1 = getHawkEyeReward();
+                    else if (currentMode === 'roger') reward1 = getRogerReward();
+                    else if (currentMode === 'law') reward1 = getLawReward();
+                    else if (currentMode === 'gravito') reward1 = getGravitoReward();
+                    displayReward(reward1);
+                }
+            });
+
+            // --- ОБРАБОТЧИКИ СОБЫТИЙ ---
+            imageUpload.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => { clickTarget.src = event.target.result; };
+                    reader.readAsDataURL(file);
+                }
+            });
+            toggleASE.addEventListener('change', (e) => { isASEActive = e.target.checked; updateAllChanceUI(); });
+            toggleLogia.addEventListener('change', (e) => { isLogiaActive = e.target.checked; updateAllChanceUI(); });
+            toggleGreatKraken.addEventListener('change', (e) => { isGreatKrakenActive = e.target.checked; });
+            toggle2xDrop.addEventListener('change', (e) => { is2xDropActive = e.target.checked; updateAllChanceUI(); });
+            selectKraken.addEventListener('click', () => setGameMode('kraken'));
+            selectBaal.addEventListener('click', () => setGameMode('baal'));
+            selectJuzo.addEventListener('click', () => setGameMode('juzo'));
+            selectHawkEye.addEventListener('click', () => setGameMode('hawkEye'));
+            selectRoger.addEventListener('click', () => setGameMode('roger'));
+            selectLaw.addEventListener('click', () => setGameMode('law'));
+            selectGravito.addEventListener('click', () => setGameMode('gravito'));
+            resetModeButton.addEventListener('click', () => {
+                gameContainer.classList.add('hidden');
+                modeSelector.classList.remove('hidden');
+                resetGame();
+            });
+
+        }); // ИСПРАВЛЕНИЕ: Закрывающая скобка для DOMContentLoaded
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .custom-scrollbar::-webkit-scrollbar { width: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #2d3748; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #4a5568; border-radius: 10px; border: 2px solid #2d3748; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background-color: #718096; }
+        .toggle-checkbox:checked { right: 0; }
+        .toggle-checkbox-green:checked { border-color: #48bb78; }
+        .toggle-checkbox-green:checked+.toggle-label-green { background-color: #48bb78; }
+        .toggle-checkbox-yellow:checked { border-color: #ecc94b; }
+        .toggle-checkbox-yellow:checked+.toggle-label-yellow { background-color: #ecc94b; }
+        .toggle-checkbox-blue:checked { border-color: #4299e1; }
+        .toggle-checkbox-blue:checked+.toggle-label-blue { background-color: #4299e1; }
+    </style>
+</head>
+
+<body class="bg-gray-900 text-gray-200 font-sans leading-normal tracking-normal min-h-screen flex items-center justify-center p-4">
+
+    <!-- 1. Экран Выбора Режима -->
+    <div id="modeSelector" class="w-full max-w-5xl relative">
+        <h1 class="text-4xl font-bold text-center text-white mb-8">Выберите Режим</h1>
+
+        <!-- НОВЫЙ БЛОК: Счетчик активных пользователей -->
+        <div class="absolute top-0 right-0 bg-gray-800 border border-gray-700 p-3 rounded-lg shadow-lg">
+            <span class="text-sm text-gray-400">Активные пользователи: </span>
+            <span id="activeUsersSelector" class="text-lg font-bold text-green-400">1</span>
+        </div>
+        <!-- КОНЕЦ НОВОГО БЛОКА -->
+
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div id="selectKraken" class="mode-card bg-gray-800 p-6 rounded-lg shadow-lg cursor-pointer transition-all duration-300 hover:shadow-2xl hover:scale-105 border border-gray-700 flex flex-col justify-center items-center h-40">
+                <h2 class="text-2xl font-semibold text-white text-center">Kraken Clicker</h2>
+            </div>
+            <div id="selectBaal" class="mode-card bg-gray-800 p-6 rounded-lg shadow-lg cursor-pointer transition-all duration-300 hover:shadow-2xl hover:scale-105 border border-gray-700 flex flex-col justify-center items-center h-40">
+                <h2 class="text-2xl font-semibold text-white text-center">True Ba'al Clicker</h2>
+            </div>
+            <div id="selectJuzo" class="mode-card bg-gray-800 p-6 rounded-lg shadow-lg cursor-pointer transition-all duration-300 hover:shadow-2xl hover:scale-105 border border-gray-700 flex flex-col justify-center items-center h-40">
+                <h2 class="text-2xl font-semibold text-white text-center">Juzo Clicker</h2>
+            </div>
+            <div id="selectHawkEye" class="mode-card bg-gray-800 p-6 rounded-lg shadow-lg cursor-pointer transition-all duration-300 hover:shadow-2xl hover:scale-105 border border-gray-700 flex flex-col justify-center items-center h-40">
+                <h2 class="text-2xl font-semibold text-white text-center">Hawk Eye Clicker</h2>
+            </div>
+            <div id="selectRoger" class="mode-card bg-gray-800 p-6 rounded-lg shadow-lg cursor-pointer transition-all duration-300 hover:shadow-2xl hover:scale-105 border border-gray-700 flex flex-col justify-center items-center h-40">
+                <h2 class="text-2xl font-semibold text-white text-center">Roger Clicker</h2>
+            </div>
+            <div id="selectLaw" class="mode-card bg-gray-800 p-6 rounded-lg shadow-lg cursor-pointer transition-all duration-300 hover:shadow-2xl hover:scale-105 border border-gray-700 flex flex-col justify-center items-center h-40">
+                <h2 class="text-2xl font-semibold text-white text-center">Law Clicker</h2>
+            </div>
+            <div id="selectGravito" class="mode-card bg-gray-800 p-6 rounded-lg shadow-lg cursor-pointer transition-all duration-300 hover:shadow-2xl hover:scale-105 border border-gray-700 flex flex-col justify-center items-center h-40">
+                <h2 class="text-2xl font-semibold text-white text-center">Gravito Clicker</h2>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Главный Интерфейс Игры -->
+    <div id="gameContainer" class="hidden w-full max-w-7xl mx-auto p-4">
+        <button id="resetMode" class="absolute top-4 left-4 bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-all duration-300 z-10">
+            Сменить Режим
+        </button>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Левая колонка -->
+            <div class="lg:col-span-1 bg-gray-800 p-6 rounded-lg shadow-lg border border-gray-700 flex flex-col items-center">
+                <h2 id="clickerTitle" class="text-3xl font-bold text-white mb-4">Kraken Clicker</h2>
+                <div class="mb-4 w-full">
+                    <label for="imageUpload" class="block text-sm font-medium text-gray-400 mb-2">Загрузить своё изображение:</label>
+                    <input type="file" id="imageUpload" accept="image/*" class="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-cyan-600 file:text-white hover:file:bg-cyan-700 cursor-pointer">
+                </div>
+                <div id="clickArea" class="w-full h-80 bg-gray-700 rounded-lg flex items-center justify-center mb-4 border-2 border-dashed border-gray-500 cursor-pointer">
+                    <img id="clickTarget" src="https://placehold.co/300x300/4A5568/E2E8F0?text=Click+Me" alt="Click target" class="max-w-full max-h-full rounded-lg object-contain transition-transform duration-75 active:scale-95">
+                </div>
+                <div class="text-center">
+                    <h3 class="text-xl font-semibold text-gray-300">Клики:</h3>
+                    <p id="clickCountDisplay" class="text-5xl font-bold text-white">0 / 1</p>
+                </div>
+            </div>
+
+            <!-- Средняя колонка -->
+            <div class="lg:col-span-1 bg-gray-800 p-6 rounded-lg shadow-lg border border-gray-700">
+                <div id="stats-block" class="mb-4">
+                    <h3 class="text-2xl font-semibold text-white mb-3 border-b border-gray-700 pb-2">Статистика</h3>
+                    <div class="flex justify-between items-center mb-2">
+                        <span id="killCountLabel" class="text-lg text-gray-300">Убито:</span>
+                        <span id="killCount" class="text-2xl font-bold text-white">0</span>
+                    </div>
+
+                    <div class="flex items-center justify-between mt-4">
+                        <span class="text-lg font-medium text-cyan-400">2x Drop Chance</span>
+                        <div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+                            <input type="checkbox" name="toggle2xDrop" id="toggle2xDrop" class="toggle-checkbox-blue toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"/>
+                            <label for="toggle2xDrop" class="toggle-label-blue toggle-label block overflow-hidden h-6 rounded-full bg-gray-600 cursor-pointer"></label>
+                        </div>
+                    </div>
+                </div>
+                <div id="lastDrop" class="mb-4">
+                    <h3 class="text-2xl font-semibold text-white mb-3 border-b border-gray-700 pb-2">Последний дроп</h3>
+                    <div id="lastDropDisplay" class="text-center text-gray-400 text-lg p-4 bg-gray-900 rounded-lg min-h-[60px] flex items-center justify-center">
+                        Нажми 1 раз, чтобы убить...
+                    </div>
+                </div>
+                <div id="chancesContainer" class="space-y-4">
+                    <!-- Kraken -->
+                    <div id="krakenChances" class="chance-block">
+                        <h3 class="text-2xl font-semibold text-white mb-3 border-b border-gray-700 pb-2">Шансы выпадения</h3>
+                        <ul class="space-y-1 text-lg">
+                            <li><span class="text-gray-400">Mysterious Book (<span id="chance-k-book">15</span>%)</span></li>
+                            <li><span class="text-green-400">Book of Spirits (<span id="chance-k-spirits">45</span>%)</span></li>
+                            <li><span class="text-red-500">Kraken Armor (<span id="chance-k-armor">1</span>%)</span></li>
+                            <li><span class="text-yellow-400">Kraken Cape (<span id="chance-k-cape">5</span>%)</span></li>
+                            <li><span class="text-red-500">Kraken Blade (<span id="chance-k-blade">1</span>%)</span></li>
+                            <li><span class="text-red-500">Kraken Katana (<span id="chance-k-katana">1</span>%)</span></li>
+                            <li><span class="text-red-500">Kraken Core (<span id="chance-k-core">1</span>%)</span></li>
+                            <li><span class="text-purple-400">Devil Fruit (<span id="chance-k-fruit">1</span>%)</span></li>
+                            <li><span class="text-gray-500">Ничего (<span id="chance-k-nothing">30</span>%)</span></li>
+                        </ul>
+                        <div class="flex items-center justify-between mt-4 p-3 bg-gray-900 rounded-lg">
+                            <span class="text-lg font-medium text-green-400">Great Kraken (100% Fruit)</span>
+                            <div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+                                <input type="checkbox" name="toggleGreatKraken" id="toggleGreatKraken" class="toggle-checkbox-green toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"/>
+                                <label for="toggleGreatKraken" class="toggle-label-green toggle-label block overflow-hidden h-6 rounded-full bg-gray-600 cursor-pointer"></label>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Ba'al -->
+                    <div id="baalChances" class="chance-block hidden">
+                        <h3 class="text-2xl font-semibold text-white mb-3 border-b border-gray-700 pb-2">Шансы выпадения</h3>
+                        <ul class="space-y-1 text-lg">
+                            <li><span class="text-yellow-400">True Ba'al's Guard (<span id="chance-b-guard">2</span>%)</span></li>
+                            <li><span class="text-yellow-400">Hollow's Great Sword (<span id="chance-b-sword">2</span>%)</span></li>
+                            <li><span class="text-yellow-400">True Ba'al's Snake Head (<span id="chance-b-head">5</span>%)</span></li>
+                            <li><span class="text-purple-400">True Ba'al's Snake Fire (<span id="chance-b-fire">20</span>%)</span></li>
+                            <li><span class="text-yellow-400">True Ba'al's Horns (<span id="chance-b-horns">5</span>%)</span></li>
+                            <li><span class="text-red-500">Hollow's World Ender (~<span id="chance-b-worldender">1</span>%)</span></li>
+                            <li><span class="text-red-500">Prestige World Ender (~<span id="chance-b-prestige">0.001</span>%)</span></li>
+                            <li><span class="text-red-500">Endbringer Wings (<span id="chance-b-wings">1</span>%)</span></li>
+                            <li><span class="text-red-500">Endbringer Armor (<span id="chance-b-armor">1</span>%)</span></li>
+                            <li><span class="text-gray-500">Ничего (~<span id="chance-b-nothing">62.999</span>%)</span></li>
+                        </ul>
+                    </div>
+                    <!-- Juzo -->
+                    <div id="juzoChances" class="chance-block hidden">
+                        <h3 class="text-2xl font-semibold text-white mb-3 border-b border-gray-700 pb-2">Шансы выпадения</h3>
+                        <ul class="space-y-1 text-lg">
+                            <li><span class="text-yellow-400">Kira Kira no Mi (<span id="chance-j-kira">5</span>%)</span></li>
+                            <li><span class="text-red-500">Turtleback Helmet (<span id="chance-j-helmet">1</span>%)</span></li>
+                            <li><span class="text-red-500">Turtleback Armor (<span id="chance-j-armor">1</span>%)</span></li>
+                            <li><span class="text-red-500">Mythical Fruit Chest (<span id="chance-j-chest">0.5</span>%)</span></li>
+                            <li><span class="text-gray-500">Ничего (<span id="chance-j-nothing">92.5</span>%)</span></li>
+                        </ul>
+                    </div>
+                    <!-- Hawk Eye -->
+                    <div id="hawkEyeChances" class="chance-block hidden">
+                        <h3 class="text-2xl font-semibold text-white mb-3 border-b border-gray-700 pb-2">Шансы выпадения</h3>
+                        <ul class="space-y-1 text-lg">
+                            <li><span class="text-red-500">Mihawk's hat (<span id="chance-h-hat">1</span>%)</span></li>
+                            <li><span class="text-red-500">Hawk Eye's Outfit (<span id="chance-h-outfit">1</span>%)</span></li>
+                            <li><span class="text-red-500">Triple Strongest Slash Scroll (<span id="chance-h-scroll">1</span>%)</span></li>
+                            <li><span class="text-red-500">Dark Blade (<span id="chance-h-blade">0.5</span>%)</span></li>
+                            <li><span class="text-yellow-400">Legendary fruit chest blue-print (<span id="chance-h-blueprint">1</span>%)</span></li>
+                            <li><span class="text-gray-500">Ничего (<span id="chance-h-nothing">95.5</span>%)</span></li>
+                        </ul>
+                    </div>
+                     <!-- Roger -->
+                    <div id="rogerChances" class="chance-block hidden">
+                        <h3 class="text-2xl font-semibold text-white mb-3 border-b border-gray-700 pb-2">Шансы выпадения</h3>
+                        <ul class="space-y-1 text-lg">
+                            <li><span class="text-yellow-400">Legendary Fruit Chest Blueprint (<span id="chance-r-blueprint">1</span>%)</span></li>
+                            <li><span class="text-yellow-400">Roger's Hat (<span id="chance-r-hat">1</span>%)</span></li>
+                            <li><span class="text-yellow-400">Roger's Outfit (<span id="chance-r-outfit">1</span>%)</span></li>
+                            <li><span class="text-red-500">Roger's Ace (<span id="chance-r-ace">0.5</span>%)</span></li>
+                            <li><span class="text-gray-500">Ничего (<span id="chance-r-nothing">96.5</span>%)</span></li>
+                        </ul>
+                    </div>
+                    <!-- Law -->
+                    <div id="lawChances" class="chance-block hidden">
+                        <h3 class="text-2xl font-semibold text-white mb-3 border-b border-gray-700 pb-2">Шансы выпадения</h3>
+                        <ul class="space-y-1 text-lg">
+                            <li><span class="text-green-400">Law's Cap (<span id="chance-l-cap">5</span>%)</span></li>
+                            <li><span class="text-green-400">Law's Outfit (<span id="chance-l-outfit">15</span>%)</span></li>
+                            <li><span class="text-green-400">Law's Cape (<span id="chance-l-cape">15</span>%)</span></li>
+                            <li><span class="text-red-500">Ope Scramble (<span id="chance-l-ope">1</span>%)</span></li>
+                            <li><span class="text-red-500">Kikoku (<span id="chance-l-kikoku">0.5</span>%)</span></li>
+                            <li><span class="text-gray-500">Ничего (<span id="chance-l-nothing">63.5</span>%)</span></li>
+                        </ul>
+                    </div>
+                    <!-- Gravito -->
+                    <div id="gravitoChances" class="chance-block hidden">
+                        <h3 class="text-2xl font-semibold text-white mb-3 border-b border-gray-700 pb-2">Шансы выпадения</h3>
+                        <ul class="space-y-1 text-lg">
+                            <li><span class="text-green-400">Gravito's Cape (<span id="chance-g-cape">35</span>%)</span></li>
+                            <li><span class="text-blue-400">Gravity Blade (<span id="chance-g-blade">15</span>%)</span></li>
+                            <li><span class="text-red-500">Hoverboard (<span id="chance-g-hoverboard">1</span>%)</span></li>
+                            <li><span class="text-red-500">Meteor Strike (<span id="chance-g-meteor">1</span>%)</span></li>
+                            <li><span class="text-gray-500">Ничего (<span id="chance-g-nothing">48</span>%)</span></li>
+                        </ul>
+                    </div>
+                    <!-- Фрукты -->
+                    <div id="fruitChancesContainer" class="mt-6">
+                        <h3 class="text-2xl font-semibold text-white mb-3 border-b border-gray-700 pb-2">Шансы Devil Fruit</h3>
+                        <div class="flex flex-col sm:flex-row justify-around gap-4 mb-4">
+                            <div class="flex items-center justify-center sm:justify-start">
+                                <span class="text-lg font-medium text-yellow-400 mr-3">ASE</span>
+                                <div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+                                    <input type="checkbox" name="toggleASE" id="toggleASE" class="toggle-checkbox-yellow toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"/>
+                                    <label for="toggleASE" class="toggle-label-yellow toggle-label block overflow-hidden h-6 rounded-full bg-gray-600 cursor-pointer"></label>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-center sm:justify-start">
+                                <span class="text-lg font-medium text-blue-400 mr-3">2x Logia</span>
+                                <div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+                                    <input type="checkbox" name="toggleLogia" id="toggleLogia" class="toggle-checkbox-blue toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"/>
+                                    <label for="toggleLogia" class="toggle-label-blue toggle-label block overflow-hidden h-6 rounded-full bg-gray-600 cursor-pointer"></label>
+                                </div>
+                            </div>
+                        </div>
+                        <ul class="space-y-1 text-lg">
+                            <li><span class="text-gray-300">Common: <span id="chanceCommon">59.5</span>%</span></li>
+                            <li><span class="text-blue-400">Rare: <span id="chanceRare">26</span>%</span></li>
+                            <li><span class="text-purple-400">Epic: <span id="chanceEpic">10</span>%</span></li>
+                            <li><span class="text-yellow-400">Legendary: <span id="chanceLegendary">4</span>%</span></li>
+                            <li><span class="text-red-500">Mythical: <span id="chanceMythical">0.5</span>%</span></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Правая колонка -->
+            <div class="lg:col-span-1 bg-gray-800 p-6 rounded-lg shadow-lg border border-gray-700 flex flex-col max-h-[80vh]">
+                <div class="mb-4 flex-shrink-0">
+                    <h3 class="text-2xl font-semibold text-white mb-3 border-b border-gray-700 pb-2">История дропа</h3>
+                    <ul id="dropList" class="custom-scrollbar h-64 overflow-y-auto space-y-2 bg-gray-900 p-3 rounded-lg">
+                    </ul>
+                </div>
+                <div id="fruitCollectionContainer" class="flex flex-col flex-grow min-h-0">
+                    <h3 class="text-2xl font-semibold text-white mb-3 border-b border-gray-700 pb-2">Коллекция Фруктов</h3>
+                    <ul id="fruitCollectionList" class="custom-scrollbar flex-grow overflow-y-auto space-y-2 bg-gray-900 p-3 rounded-lg">
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
