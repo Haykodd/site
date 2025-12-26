@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Mode Clicker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script type="module">
+        // Ждем загрузки DOM
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // --- КАРТИНКИ РЕЖИМОВ ---
+            const modeImages = {
+                kraken: 'Kraken.png',
+                baal: 'TBaal.png',
+                juzo: 'Juzo.png',
+                hawkEye: 'Mihawk.png',
+                roger: 'Roger.png',
+                law: 'Law.png',
+                gravito: 'Gravito.webp',
+                christmasPresents: 'https://placehold.co/300x300/10B981/FFFFFF?text=Christmas+Presents',
+                legendaryChest: 'https://placehold.co/300x300/EAB308/1F2937?text=Legendary+Chest',
+                mythicalChest: 'https://placehold.co/300x300/EF4444/1F2937?text=Mythical+Chest',
+                rareChest: 'https://placehold.co/300x300/3B82F6/1F2937?text=Rare+Chest'
+            };
+
+            // --- ЭЛЕМЕНТЫ DOM ---
+            const modeSelector = document.getElementById('modeSelector');
+            const gameContainer = document.getElementById('gameContainer');
+            const clickerTitle = document.getElementById('clickerTitle');
+            const killCountLabel = document.getElementById('killCountLabel');
+
+            const modes = ['Kraken', 'Baal', 'Juzo', 'HawkEye', 'Roger', 'Law', 'Gravito', 'ChristmasPresents', 'LegendaryChest', 'MythicalChest', 'RareChest'];
+            const selectors = {};
+            modes.forEach(m => selectors[m] = document.getElementById(`select${m}`));
+
+            const resetModeButton = document.getElementById('resetModeButton');
+            const imageUpload = document.getElementById('imageUpload');
+            const clickTarget = document.getElementById('clickTarget');
+            const clickCountDisplay = document.getElementById('clickCountDisplay');
+
+            const btnX1 = document.getElementById('btnX1');
+            const btnX10 = document.getElementById('btnX10');
+            const btnX100 = document.getElementById('btnX100');
+            const btnX1000 = document.getElementById('btnX1000');
+
+            const chanceBlocks = {};
+            ['kraken', 'baal', 'juzo', 'hawkEye', 'roger', 'law', 'gravito', 'christmasPresents', 'legendaryChest', 'mythicalChest', 'rareChest'].forEach(m => {
+                chanceBlocks[m] = document.getElementById(`${m}Chances`);
+            });
+
+            const fruitChancesContainer = document.getElementById('fruitChancesContainer');
+            const fruitCollectionContainer = document.getElementById('fruitCollectionContainer'); 
+
+            const killCountEl = document.getElementById('killCount');
+            const lastDropDisplay = document.getElementById('lastDropDisplay');
+            const dropList = document.getElementById('dropList');
+            const fruitCollectionList = document.getElementById('fruitCollectionList'); 
+
+            // Переключатели
+            const toggles = {
+                ASE: [document.getElementById('toggleASE'), document.getElementById('toggleLFC_ASE'), document.getElementById('toggleRFCR_ASE')],
+                Logia: [document.getElementById('toggleLogia'), document.getElementById('toggleLFCLogia'), document.getElementById('toggleRFCRLogia')],
+                GreatKraken: document.getElementById('toggleGreatKraken'),
+                Drop2x: document.getElementById('toggle2xDrop'),
+                Drop4x: document.getElementById('toggle4xDrop')
+            };
+
+            // --- СОСТОЯНИЕ ИГРЫ ---
+            let clickCount = 0;
+            let killCount = 0;
+            let currentMode = '';
+            const CLICKS_PER_KILL = 1;
+
+            let lastDroppedItemName = null;
+            let lastDropListItem = null;
+            let lastDropCount = 1;
+
+            let isASEActive = false;
+            let isLogiaActive = false;
+            let isGreatKrakenActive = false;
+            let is2xDropActive = false;
+            let is4xDropActive = false;
+
+            // Глобальное хранилище коллекций для каждого режима
+            let modeCollections = {
+                kraken: {}, baal: {}, juzo: {}, hawkEye: {}, roger: {},
+                law: {}, gravito: {}, christmasPresents: {},
+                legendaryChest: {}, mythicalChest: {}, rareChest: {}
+            };
+
+            // --- БАЗЫ ДАННЫХ ДРОПА ---
+            const krakenRewards = [
+                { name: "Mysterious Book", chance: 15, color: "text-yellow-400" },
+                { name: "Book of Spirits", chance: 45, color: "text-green-400" },
+                { name: "Kraken Armor", chance: 1, color: "text-red-500" },
+                { name: "Kraken Cape", chance: 5, color: "text-yellow-400" },
+                { name: "Kraken Blade", chance: 1, color: "text-red-500" },
+                { name: "Kraken Katana", chance: 1, color: "text-red-500" },
+                { name: "Kraken Core", chance: 1, color: "text-red-500" },
+                { name: "Devil Fruit", chance: 1, color: "text-purple-400" },
+                { name: "Ничего", chance: 30, color: "text-gray-500" },
+            ];
+            const baalRewards = [
+                { name: "True Ba'al's Snake Fire", chance: 20, color: "text-yellow-400" },
+                { name: "True Ba'al's Snake Head", chance: 5, color: "text-purple-400" },
+                { name: "True Ba'al's Horns", chance: 5, color: "text-purple-400" },
+                { name: "True Ba'al's Guard", chance: 2, color: "text-purple-400" },
+                { name: "Hollow's Great Sword", chance: 2, color: "text-purple-400" },
+                { name: "Hollow's World Ender", chance: 1, color: "text-red-500" },
+                { name: "Prestige World Ender", chance: 0.001, color: "text-red-500 animate-pulse font-black" },
+                { name: "Endbringer Wings", chance: 1, color: "text-red-500" },
+                { name: "Endbringer Armor", chance: 1, color: "text-red-500" },
+                { name: "Ничего", chance: 62.999, color: "text-gray-500" },
+            ];
+            const juzoRewards = [
+                { name: "Kira Kira no Mi", chance: 5, color: "text-purple-400" },
+                { name: "Turtleback Helmet", chance: 1, color: "text-purple-400" },
+                { name: "Turtleback Armor", chance: 1, color: "text-purple-400" },
+                { name: "Mythical Fruit Chest", chance: 0.5, color: "text-red-500" },
+                { name: "Ничего", chance: 92.5, color: "text-gray-500" },
+            ];
+            const hawkEyeRewards = [
+                { name: "Mihawk's hat", chance: 1, color: "text-purple-400" },
+                { name: "Hawk Eye's Outfit", chance: 1, color: "text-purple-400" },
+                { name: "Triple Strongest Slash Scroll", chance: 1, color: "text-purple-400" },
+                { name: "Legendary fruit chest blue-print", chance: 1, color: "text-yellow-400" },
+                { name: "Dark Blade", chance: 0.5, color: "text-red-500" },
+                { name: "Ничего", chance: 95.5, color: "text-gray-500" },
+            ];
+            const rogerRewards = [
+                { name: "Legendary Fruit Chest Blueprint", chance: 1, color: "text-yellow-400" },
+                { name: "Roger's Hat", chance: 1, color: "text-yellow-400" },
+                { name: "Roger's Outfit", chance: 1, color: "text-yellow-400" },
+                { name: "Roger's Ace", chance: 0.5, color: "text-red-500" },
+                { name: "Ничего", chance: 96.5, color: "text-gray-500" },
+            ];
+            const lawRewards = [
+                { name: "Law's Outfit", chance: 15, color: "text-purple-400" },
+                { name: "Law's Cape", chance: 15, color: "text-purple-400" },
+                { name: "Law's Cap", chance: 5, color: "text-purple-400" },
+                { name: "Ope Scramble", chance: 1, color: "text-yellow-400" },
+                { name: "Kikoku", chance: 0.5, color: "text-red-500" },
+                { name: "Ничего", chance: 63.5, color: "text-gray-500" },
+            ];
+            const gravitoRewards = [
+                { name: "Gravito's Cape", chance: 35, color: "text-green-400" },
+                { name: "Gravity Blade", chance: 15, color: "text-blue-400" },
+                { name: "Hoverboard", chance: 1, color: "text-red-500" },
+                { name: "Meteor Strike", chance: 1, color: "text-red-500" },
+                { name: "Ничего", chance: 48, color: "text-gray-500" },
+            ];
+            const christmasRewards = [
+                { name: "Iceborn candy cane", chance: 0.004, color: "rainbow-text font-black" },
+                { name: "Ничего", chance: 99.996, color: "text-gray-500" }
+            ];
+
+            const fruitListsByRarity = {
+                Mythical: ["Tori", "Mochi", "Ope", "Venom", "Buddha", "Pteranodon"],
+                Legendary: ["Mera", "Pika", "Hie", "Magu", "Goro", "Gura", "Zushi", "Suna", "Ito", "Paw", "Kage", "Yami", "Goru", "Smoke", "Yuki"],
+                Epic: ["Yomi", "Spring", "Kira"],
+                Rare: ["Bari", "Mero", "Horo", "Gomu", "Bomu"],
+                Common: ["Suke", "Kilo", "Spin", "Heal"]
+            };
+
+            const fruitRarityChances = {
+                none: [{ name: "Common", chance: 59.5, color: "text-gray-300" }, { name: "Rare", chance: 26, color: "text-blue-400" }, { name: "Epic", chance: 10, color: "text-purple-400" }, { name: "Legendary", chance: 4, color: "text-yellow-400" }, { name: "Mythical", chance: 0.5, color: "text-red-500" }],
+                oneActive: [{ name: "Common", chance: 54, color: "text-gray-300" }, { name: "Rare", chance: 26, color: "text-blue-400" }, { name: "Epic", chance: 10, color: "text-purple-400" }, { name: "Legendary", chance: 8, color: "text-yellow-400" }, { name: "Mythical", chance: 1, color: "text-red-500" }],
+                bothActive: [{ name: "Common", chance: 44, color: "text-gray-300" }, { name: "Rare", chance: 26, color: "text-blue-400" }, { name: "Epic", chance: 10, color: "text-purple-400" }, { name: "Legendary", chance: 16, color: "text-yellow-400" }, { name: "Mythical", chance: 2, color: "text-red-500" }]
+            };
+
+            const lfcRarityChances = {
+                none: [{ name: "Legendary", chance: 99.5, color: "text-yellow-400" }, { name: "Mythical", chance: 0.5, color: "text-red-500" }],
+                oneActive: [{ name: "Legendary", chance: 99, color: "text-yellow-400" }, { name: "Mythical", chance: 1, color: "text-red-500" }],
+                bothActive: [{ name: "Legendary", chance: 98, color: "text-yellow-400" }, { name: "Mythical", chance: 2, color: "text-red-500" }]
+            };
+
+            const mfcRarityChances = {
+                none: [{ name: "Mythical", chance: 100, color: "text-red-500" }],
+                oneActive: [{ name: "Mythical", chance: 100, color: "text-red-500" }],
+                bothActive: [{ name: "Mythical", chance: 100, color: "text-red-500" }]
+            };
+
+            const rfcRarityChances = {
+                none: [{ name: "Rare", chance: 87.5, color: "text-blue-400" }, { name: "Epic", chance: 10, color: "text-purple-400" }, { name: "Legendary", chance: 2, color: "text-yellow-400" }, { name: "Mythical", chance: 0.5, color: "text-red-500" }],
+                oneActive: [{ name: "Rare", chance: 85, color: "text-blue-400" }, { name: "Epic", chance: 10, color: "text-purple-400" }, { name: "Legendary", chance: 4, color: "text-yellow-400" }, { name: "Mythical", chance: 1, color: "text-red-500" }],
+                bothActive: [{ name: "Rare", chance: 80, color: "text-blue-400" }, { name: "Epic", chance: 10, color: "text-purple-400" }, { name: "Legendary", chance: 8, color: "text-yellow-400" }, { name: "Mythical", chance: 2, color: "text-red-500" }]
+            };
+
+            // --- ЛОГИКА ---
+            function getCurrentMultiplier() {
+                if (is4xDropActive) return 4;
+                if (is2xDropActive) return 2;
+                return 1;
+            }
+
+            function syncBuffs() {
+                toggles.ASE.forEach(t => { if(t) t.checked = isASEActive; });
+                toggles.Logia.forEach(t => { if(t) t.checked = isLogiaActive; });
+                updateAllChanceUI();
+            }
+
+            function setGameMode(mode) {
+                currentMode = mode;
+                modeSelector.classList.add('hidden');
+                gameContainer.classList.remove('hidden');
+
+                Object.values(chanceBlocks).forEach(el => el?.classList.add('hidden'));
+                if (fruitChancesContainer) fruitChancesContainer.classList.add('hidden');
+                if (fruitCollectionContainer) fruitCollectionContainer.classList.remove('hidden');
+
+                const modeTitleMap = {
+                    kraken: "Kraken Clicker", baal: "True Ba'al Clicker", juzo: "Juzo Clicker",
+                    hawkEye: "Hawk Eye Clicker", roger: "Roger Clicker", law: "Law Clicker",
+                    gravito: "Gravito Clicker", christmasPresents: "Christmas Presents",
+                    legendaryChest: "Legendary Fruit Chest", mythicalChest: "Mythical Fruit Chest",
+                    rareChest: "Rare Fruit Chest"
+                };
+
+                if (clickerTitle) clickerTitle.textContent = modeTitleMap[mode] || "Clicker";
+                if (killCountLabel) killCountLabel.textContent = (mode.includes('Chest') || mode === 'christmasPresents') ? "Открыто:" : "Убито:";
+
+                if (chanceBlocks[mode]) chanceBlocks[mode].classList.remove('hidden');
+                if (mode === 'kraken') {
+                    if (fruitChancesContainer) fruitChancesContainer.classList.remove('hidden');
+                }
+
+                resetGameUI();
+                syncBuffs();
+                refreshCollectionUI(); 
+                clickTarget.src = modeImages[mode] || 'https://placehold.co/300x300?text=Click+Me';
+            }
+
+            function resetGameUI() {
+                clickCount = 0;
+                killCount = 0;
+                lastDroppedItemName = null;
+                lastDropListItem = null;
+                lastDropCount = 1;
+                if (clickCountDisplay) clickCountDisplay.textContent = `0 / ${CLICKS_PER_KILL}`;
+                if (killCountEl) killCountEl.textContent = '0';
+                if (lastDropDisplay) {
+                    lastDropDisplay.textContent = `Нажми 1 раз...`;
+                    lastDropDisplay.className = "text-center text-gray-400 p-4 bg-gray-900 rounded-lg min-h-[60px] flex items-center justify-center font-bold";
+                }
+                if (dropList) dropList.innerHTML = '';
+            }
+
+            function refreshCollectionUI() {
+                if (!fruitCollectionList) return;
+                fruitCollectionList.innerHTML = '';
+                const currentColl = modeCollections[currentMode] || {};
+                
+                for (const [itemName, count] of Object.entries(currentColl)) {
+                    let itemColor = "text-gray-300";
+                    const allRewards = [...krakenRewards, ...baalRewards, ...juzoRewards, ...hawkEyeRewards, ...rogerRewards, ...lawRewards, ...gravitoRewards, ...christmasRewards];
+                    const rewardData = allRewards.find(r => r.name === itemName);
+                    if (rewardData) itemColor = rewardData.color;
+                    else {
+                        for (const rarity in fruitListsByRarity) {
+                            if (fruitListsByRarity[rarity].includes(itemName)) {
+                                if (rarity === "Mythical") itemColor = "text-red-500";
+                                else if (rarity === "Legendary") itemColor = "text-yellow-400";
+                                else if (rarity === "Epic") itemColor = "text-purple-400";
+                                else if (rarity === "Rare") itemColor = "text-blue-400";
+                                break;
+                            }
+                        }
+                    }
+
+                    const safeId = `coll-${itemName.replace(/\s+/g, '-').replace(/'/g, '')}`;
+                    const li = document.createElement('li');
+                    li.id = safeId;
+                    li.className = `flex justify-between items-center ${itemColor} font-medium py-1 border-b border-gray-800`;
+                    li.innerHTML = `<p>${itemName}</p><span class="text-lg font-bold">x${count}</span>`;
+                    fruitCollectionList.appendChild(li);
+                }
+            }
+
+            function getRewardFromList(rewardsList, useMultipliers = true) {
+                let chances = [...rewardsList];
+                const mult = useMultipliers ? getCurrentMultiplier() : 1;
+                if (mult > 1) {
+                    let multipliedChances = chances.map(item => {
+                        if (item.name === "Ничего") return { ...item };
+                        return { ...item, chance: item.chance * mult };
+                    });
+                    const totalChance = multipliedChances.reduce((acc, item) => item.name !== "Ничего" ? acc + item.chance : acc, 0);
+                    const nothingItem = multipliedChances.find(item => item.name === "Ничего");
+                    if (nothingItem) nothingItem.chance = Math.max(0, 100 - totalChance);
+                    chances = multipliedChances;
+                }
+                const totalWeight = chances.reduce((acc, r) => acc + r.chance, 0);
+                let random = Math.random() * totalWeight;
+                for (const reward of chances) {
+                    if (random < reward.chance) return reward;
+                    random -= reward.chance;
+                }
+            }
+
+            function getFruitReward(chanceSet, useModifiers) {
+                let key = (isASEActive && isLogiaActive) ? 'bothActive' : (isASEActive || isLogiaActive ? 'oneActive' : 'none');
+                let chancesList = chanceSet[key];
+                const mult = (currentMode === 'kraken') ? getCurrentMultiplier() : 1;
+                if (mult > 1) {
+                    let multiplied = chancesList.map(item => ({ ...item, chance: item.chance * mult }));
+                    const total = multiplied.reduce((acc, i) => acc + i.chance, 0);
+                    if (total > 100) {
+                        const scale = 100 / total;
+                        multiplied = multiplied.map(i => ({ ...i, chance: i.chance * scale }));
+                    } else {
+                        const common = multiplied.find(i => i.name === "Common");
+                        if (common) common.chance += (100 - total);
+                    }
+                    chancesList = multiplied;
+                }
+                const rarity = getRewardFromList(chancesList, false);
+                const list = fruitListsByRarity[rarity.name];
+                return { name: list[Math.floor(Math.random() * list.length)], color: rarity.color, rarity: rarity.name };
+            }
+
+            function updateAllChanceUI() {
+                const mult = getCurrentMultiplier();
+                const updateNode = (id, base) => {
+                    const el = document.getElementById(id);
+                    if (el) el.textContent = (base * mult).toFixed(base < 1 ? 3 : 1);
+                };
+                const updateNothingNode = (id, items) => {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        let total = items.reduce((acc, i) => acc + (i.base * mult), 0);
+                        el.textContent = Math.max(0, 100 - total).toFixed(items.some(i => i.base < 1) ? 3 : 1);
+                    }
+                };
+
+                let key = (isASEActive && isLogiaActive) ? 'bothActive' : (isASEActive || isLogiaActive ? 'oneActive' : 'none');
+                
+                // Kraken
+                updateNode('chance-k-book', 15); updateNode('chance-k-spirits', 45); 
+                updateNothingNode('chance-k-nothing', [{base:15},{base:45},{base:1},{base:5},{base:1},{base:1},{base:1},{base:1}]);
+                
+                // Christmas
+                updateNode('chance-xm-cane-ice', 0.004); updateNothingNode('chance-xm-nothing', [{base:0.004}]);
+
+                // Baal
+                updateNode('chance-b-prestige', 0.001); updateNode('chance-b-fire', 20); updateNode('chance-b-head', 5); updateNode('chance-b-horns', 5);
+                updateNode('chance-b-guard', 2); updateNode('chance-b-sword', 2); updateNode('chance-b-worldender', 1);
+                updateNothingNode('chance-b-nothing', [{base:20},{base:5},{base:5},{base:2},{base:2},{base:1},{base:0.001},{base:1},{base:1}]);
+
+                // Juzo
+                updateNode('chance-j-kira', 5); updateNode('chance-j-chest', 0.5); updateNode('chance-j-helmet', 1); updateNode('chance-j-armor', 1);
+                updateNothingNode('chance-j-nothing', [{base:5},{base:0.5},{base:1},{base:1}]);
+
+                // Hawk Eye
+                updateNode('chance-h-hat', 1); updateNode('chance-h-outfit', 1); updateNode('chance-h-scroll', 1); updateNode('chance-h-blueprint', 1); updateNode('chance-h-blade', 0.5);
+                updateNothingNode('chance-h-nothing', [{base:1},{base:1},{base:1},{base:1},{base:0.5}]);
+
+                // Roger
+                updateNode('chance-r-blueprint', 1); updateNode('chance-r-hat', 1); updateNode('chance-r-outfit', 1); updateNode('chance-r-ace', 0.5);
+                updateNothingNode('chance-r-nothing', [{base:1},{base:1},{base:1},{base:0.5}]);
+
+                // Law
+                updateNode('chance-l-outfit', 15); updateNode('chance-l-cape', 15); updateNode('chance-l-cap', 5); updateNode('chance-l-ope', 1); updateNode('chance-l-kikoku', 0.5);
+                updateNothingNode('chance-l-nothing', [{base:15},{base:15},{base:5},{base:1},{base:0.5}]);
+
+                // Gravito
+                updateNode('chance-g-cape', 35); updateNode('chance-g-blade', 15); updateNode('chance-g-hoverboard', 1); updateNode('chance-g-meteor', 1);
+                updateNothingNode('chance-g-nothing', [{base:35},{base:15},{base:1},{base:1}]);
+
+                // Fruit UI (Kraken)
+                let fList = fruitRarityChances[key];
+                const setF = (id, name) => { const el = document.getElementById(id); if (el) el.textContent = fList.find(i => i.name === name).chance.toFixed(1); };
+                setF('chanceCommon', 'Common'); setF('chanceLegendary', 'Legendary'); setF('chanceMythical', 'Mythical');
+                
+                const lfcSet = lfcRarityChances[key];
+                const lfcMyth = document.getElementById('lfc_myth_chance');
+                if(lfcMyth) lfcMyth.textContent = lfcSet.find(i => i.name === "Mythical").chance.toFixed(1);
+            }
+
+            function displayReward(reward) {
+                if (!reward || !reward.name || reward.name === "Ничего") {
+                    if (lastDropDisplay) {
+                        lastDropDisplay.textContent = "Ничего";
+                        lastDropDisplay.className = "text-center text-gray-500 text-lg p-4 bg-gray-900 rounded-lg min-h-[60px] flex items-center justify-center font-bold";
+                    }
+                    lastDroppedItemName = "Ничего";
+                    return;
+                }
+                const itemName = reward.name;
+                const itemColor = reward.color || "text-gray-300";
+                
+                if (lastDropDisplay) {
+                    lastDropDisplay.textContent = itemName;
+                    lastDropDisplay.className = `text-center text-lg p-4 bg-gray-900 rounded-lg min-h-[60px] flex items-center justify-center font-bold ${itemColor}`;
+                }
+
+                if (itemName === lastDroppedItemName && lastDropListItem) {
+                    lastDropCount++;
+                    lastDropListItem.querySelector('span.count-badge').textContent = `x${lastDropCount}`;
+                } else {
+                    lastDropCount = 1;
+                    lastDroppedItemName = itemName;
+                    const li = document.createElement('li');
+                    li.className = `flex justify-between items-center ${itemColor} font-medium py-1`;
+                    li.innerHTML = `<p>${itemName}</p><span class="count-badge text-sm text-gray-400"></span>`;
+                    if (dropList) dropList.prepend(li);
+                    lastDropListItem = li;
+                }
+
+                if (!modeCollections[currentMode]) modeCollections[currentMode] = {};
+                modeCollections[currentMode][itemName] = (modeCollections[currentMode][itemName] || 0) + 1;
+                
+                const safeId = `coll-${itemName.replace(/\s+/g, '-').replace(/'/g, '')}`;
+                let collLi = document.getElementById(safeId);
+                if (!collLi) {
+                    collLi = document.createElement('li');
+                    collLi.id = safeId;
+                    collLi.className = `flex justify-between items-center ${itemColor} font-medium py-1 border-b border-gray-800`;
+                    collLi.innerHTML = `<p>${itemName}</p><span class="text-lg font-bold">x1</span>`;
+                    if (fruitCollectionList) fruitCollectionList.appendChild(collLi);
+                } else {
+                    collLi.querySelector('span').textContent = `x${modeCollections[currentMode][itemName]}`;
+                }
+            }
+
+            function processOpening(amount) {
+                if (!currentMode) return;
+                for (let i = 0; i < amount; i++) {
+                    let reward;
+                    switch (currentMode) {
+                        case 'kraken': reward = isGreatKrakenActive ? getFruitReward(fruitRarityChances, true) : getRewardFromList(krakenRewards); if (reward?.name === "Devil Fruit") reward = getFruitReward(fruitRarityChances, true); break;
+                        case 'baal': reward = getRewardFromList(baalRewards); break;
+                        case 'juzo': reward = getRewardFromList(juzoRewards); break;
+                        case 'hawkEye': reward = getRewardFromList(hawkEyeRewards); break;
+                        case 'roger': reward = getRewardFromList(rogerRewards); break;
+                        case 'law': reward = getRewardFromList(lawRewards); break;
+                        case 'gravito': reward = getRewardFromList(gravitoRewards); break;
+                        case 'christmasPresents': reward = getRewardFromList(christmasRewards); break;
+                        case 'legendaryChest': reward = getFruitReward(lfcRarityChances, true); break;
+                        case 'mythicalChest': reward = getFruitReward(mfcRarityChances, true); break;
+                        case 'rareChest': reward = getFruitReward(rfcRarityChances, true); break;
+                    }
+                    displayReward(reward);
+                }
+                killCount += amount;
+                if (killCountEl) killCountEl.textContent = killCount;
+            }
+
+            clickTarget.addEventListener('click', () => {
+                clickCount++;
+                if (clickCountDisplay) clickCountDisplay.textContent = `${clickCount} / ${CLICKS_PER_KILL}`;
+                if (clickCount >= CLICKS_PER_KILL) {
+                    clickCount = 0;
+                    if (clickCountDisplay) clickCountDisplay.textContent = `0 / ${CLICKS_PER_KILL}`;
+                    processOpening(1);
+                }
+            });
+
+            btnX1?.addEventListener('click', () => processOpening(1));
+            btnX10?.addEventListener('click', () => processOpening(10));
+            btnX100?.addEventListener('click', () => processOpening(100));
+            btnX1000?.addEventListener('click', () => processOpening(1000));
+
+            toggles.ASE.forEach(t => t?.addEventListener('change', e => { isASEActive = e.target.checked; syncBuffs(); }));
+            toggles.Logia.forEach(t => t?.addEventListener('change', e => { isLogiaActive = e.target.checked; syncBuffs(); }));
+            toggles.GreatKraken.addEventListener('change', e => isGreatKrakenActive = e.target.checked);
+            toggles.Drop2x.addEventListener('change', e => { is2xDropActive = e.target.checked; if (is2xDropActive) { is4xDropActive = false; if (toggles.Drop4x) toggles.Drop4x.checked = false; } updateAllChanceUI(); });
+            toggles.Drop4x.addEventListener('change', e => { is4xDropActive = e.target.checked; if (is4xDropActive) { is2xDropActive = false; if (toggles.Drop2x) toggles.Drop2x.checked = false; } updateAllChanceUI(); });
+
+            modes.forEach(m => selectors[m]?.addEventListener('click', () => setGameMode(m.charAt(0).toLowerCase() + m.slice(1))));
+            if (resetModeButton) resetModeButton.addEventListener('click', () => { gameContainer.classList.add('hidden'); modeSelector.classList.remove('hidden'); resetGameUI(); });
+        });
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .custom-scrollbar::-webkit-scrollbar { width: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #2d3748; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #4a5568; border-radius: 10px; }
+        @keyframes rainbow {
+            0% { color: #ff0000; } 17% { color: #ffff00; } 33% { color: #00ff00; } 50% { color: #00ffff; } 67% { color: #0000ff; } 83% { color: #ff00ff; } 100% { color: #ff0000; }
+        }
+        .rainbow-text { animation: rainbow 3s linear infinite; }
+        .toggle-checkbox:checked { right: 0; }
+    </style>
+</head>
+
+<body class="bg-gray-900 text-gray-200 font-sans min-h-screen flex items-center justify-center p-4">
+
+    <!-- Экран Выбора -->
+    <div id="modeSelector" class="w-full max-w-7xl relative">
+        <h1 class="text-4xl font-bold text-center text-white mb-8 uppercase tracking-widest">Выберите Режим</h1>
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 text-center">
+            <div id="selectKraken" class="mode-card bg-gray-800 p-6 rounded-lg shadow-lg cursor-pointer transition hover:scale-105 border border-gray-700 flex flex-col justify-center items-center h-40"><h2 class="text-2xl font-semibold">Kraken</h2></div>
+            <div id="selectBaal" class="mode-card bg-gray-800 p-6 rounded-lg shadow-lg cursor-pointer transition hover:scale-105 border border-gray-700 flex flex-col justify-center items-center h-40"><h2 class="text-2xl font-semibold text-orange-500">True Ba'al</h2></div>
+            <div id="selectJuzo" class="mode-card bg-gray-800 p-6 rounded-lg shadow-lg cursor-pointer transition hover:scale-105 border border-gray-700 flex flex-col justify-center items-center h-40"><h2 class="text-2xl font-semibold text-green-500">Juzo</h2></div>
+            <div id="selectHawkEye" class="mode-card bg-gray-800 p-6 rounded-lg shadow-lg cursor-pointer transition hover:scale-105 border border-gray-700 flex flex-col justify-center items-center h-40"><h2 class="text-2xl font-semibold text-red-600">Hawk Eye</h2></div>
+            <div id="selectRoger" class="mode-card bg-gray-800 p-6 rounded-lg shadow-lg cursor-pointer transition hover:scale-105 border border-gray-700 flex flex-col justify-center items-center h-40"><h2 class="text-2xl font-semibold text-yellow-400">Roger</h2></div>
+            <div id="selectLaw" class="mode-card bg-gray-800 p-6 rounded-lg shadow-lg cursor-pointer transition hover:scale-105 border border-gray-700 flex flex-col justify-center items-center h-40"><h2 class="text-2xl font-semibold">Law</h2></div>
+            <div id="selectGravito" class="mode-card bg-gray-800 p-6 rounded-lg shadow-lg cursor-pointer transition hover:scale-105 border border-gray-700 flex flex-col justify-center items-center h-40"><h2 class="text-2xl font-semibold text-cyan-400">Gravito</h2></div>
+            <div id="selectChristmasPresents" class="mode-card bg-green-900 p-6 rounded-lg shadow-lg cursor-pointer transition hover:scale-105 border border-green-500 flex flex-col justify-center items-center h-40"><h2 class="text-2xl font-semibold text-white">Christmas</h2></div>
+            <div id="selectLegendaryChest" class="mode-card bg-gray-800 p-6 rounded-lg shadow-lg cursor-pointer transition hover:scale-105 border border-yellow-600 flex flex-col justify-center items-center h-40"><h2 class="text-2xl font-semibold text-yellow-400">Legendary Fruit Chest</h2></div>
+            <div id="selectMythicalChest" class="mode-card bg-gray-800 p-6 rounded-lg shadow-lg cursor-pointer transition hover:scale-105 border border-red-600 flex flex-col justify-center items-center h-40"><h2 class="text-2xl font-semibold text-red-500">Mythical Fruit Chest</h2></div>
+            <div id="selectRareChest" class="mode-card bg-gray-800 p-6 rounded-lg shadow-lg cursor-pointer transition hover:scale-105 border border-blue-600 flex flex-col justify-center items-center h-40"><h2 class="text-2xl font-semibold text-blue-400">Rare Fruit Chest</h2></div>
+        </div>
+    </div>
+
+    <!-- Интерфейс Игры -->
+    <div id="gameContainer" class="hidden w-full max-w-7xl mx-auto p-4">
+        <button id="resetModeButton" class="absolute top-4 left-4 bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg shadow-md z-10 transition">Сменить Режим</button>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Лево -->
+            <div class="lg:col-span-1 bg-gray-800 p-6 rounded-lg border border-gray-700 flex flex-col items-center">
+                <h2 id="clickerTitle" class="text-3xl font-bold text-white mb-4 uppercase text-center tracking-tighter">...</h2>
+                <input type="file" id="imageUpload" accept="image/*" class="block w-full text-sm text-gray-400 mb-4 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:bg-cyan-600 file:text-white cursor-pointer">
+                <div id="clickArea" class="w-full h-80 bg-gray-700 rounded-lg flex items-center justify-center mb-4 border-2 border-dashed border-gray-500 cursor-pointer overflow-hidden">
+                    <img id="clickTarget" src="https://placehold.co/300x300?text=Click+Me" class="max-w-full max-h-full object-contain transition active:scale-95">
+                </div>
+                <div class="flex flex-wrap gap-2 w-full mb-4">
+                    <button id="btnX1" class="flex-1 bg-gray-700 hover:bg-gray-600 py-2 rounded font-bold transition">x1</button>
+                    <button id="btnX10" class="flex-1 bg-cyan-800 hover:bg-cyan-700 py-2 rounded font-bold transition">x10</button>
+                    <button id="btnX100" class="flex-1 bg-purple-800 hover:bg-purple-700 py-2 rounded font-bold transition">x100</button>
+                    <button id="btnX1000" class="flex-1 bg-red-800 hover:bg-red-700 py-2 rounded font-bold transition">x1000</button>
+                </div>
+                <div class="text-center">
+                    <h3 class="text-xl font-semibold text-gray-300">Клики: <span id="clickCountDisplay" class="text-white">0 / 1</span></h3>
+                </div>
+            </div>
+
+            <!-- Середина -->
+            <div class="lg:col-span-1 bg-gray-800 p-6 rounded-lg border border-gray-700 overflow-y-auto max-h-[85vh] custom-scrollbar">
+                <div class="mb-4">
+                    <h3 class="text-2xl font-semibold text-white mb-3 border-b border-gray-700 pb-2 uppercase tracking-tighter">Статистика</h3>
+                    <div class="flex justify-between mb-2"><span id="killCountLabel" class="text-gray-400 uppercase text-xs font-bold">Убито:</span><span id="killCount" class="text-2xl font-bold">0</span></div>
+                    <div class="space-y-3 mt-4">
+                        <div class="flex items-center justify-between"><span class="text-cyan-400 font-bold">2x Drop</span><input type="checkbox" id="toggle2xDrop" class="w-5 h-5 cursor-pointer"></div>
+                        <div class="flex items-center justify-between"><span class="text-purple-400 font-bold">4x Drop</span><input type="checkbox" id="toggle4xDrop" class="w-5 h-5 cursor-pointer"></div>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <h3 class="text-2xl font-semibold text-white mb-3 border-b border-gray-700 pb-2 italic">Последний дроп</h3>
+                    <div id="lastDropDisplay" class="text-center text-gray-400 p-4 bg-gray-900 rounded-lg min-h-[60px] flex items-center justify-center font-bold">Нажми 1 раз...</div>
+                </div>
+
+                <div id="chancesContainer" class="space-y-4">
+                    <!-- Mythical Chest UI -->
+                    <div id="mythicalChestChances" class="chance-block hidden">
+                         <div class="bg-gray-900 p-3 rounded-lg border border-red-500">
+                             <p class="text-red-500 font-black text-center uppercase tracking-widest">100% Mythical Drop</p>
+                         </div>
+                    </div>
+
+                    <!-- Legendary Chest UI -->
+                    <div id="legendaryChestChances" class="chance-block hidden space-y-4">
+                        <div class="bg-gray-900 p-3 rounded-lg space-y-2">
+                            <div class="flex justify-between items-center"><span class="text-yellow-400 font-bold">ASE (Eye)</span><input type="checkbox" id="toggleLFC_ASE" class="w-5 h-5 cursor-pointer"></div>
+                            <div class="flex justify-between items-center"><span class="text-blue-400 font-bold">2x Logia</span><input type="checkbox" id="toggleLFCLogia" class="w-5 h-5 cursor-pointer"></div>
+                        </div>
+                        <p class="text-center text-xs text-gray-400">Шанс на Mythical: <span id="lfc_myth_chance" class="text-red-500 font-bold">0.5</span>%</p>
+                    </div>
+
+                    <!-- Rare Chest UI -->
+                    <div id="rareChestChances" class="chance-block hidden space-y-4">
+                        <div class="bg-gray-900 p-3 rounded-lg space-y-2">
+                            <div class="flex justify-between items-center"><span class="text-yellow-400 font-bold">ASE (Eye)</span><input type="checkbox" id="toggleRFCR_ASE" class="w-5 h-5 cursor-pointer"></div>
+                            <div class="flex justify-between items-center"><span class="text-blue-400 font-bold">2x Logia</span><input type="checkbox" id="toggleRFCRLogia" class="w-5 h-5 cursor-pointer"></div>
+                        </div>
+                        <p class="text-center text-xs text-gray-400">Шанс на Mythical: <span id="rfc_myth_chance" class="text-red-500 font-bold">0.5</span>%</p>
+                    </div>
+
+                    <!-- Боссы со списками -->
+                    <div id="krakenChances" class="chance-block hidden space-y-2">
+                         <div class="flex items-center justify-between bg-gray-900 p-2 rounded"><span class="text-green-500 text-xs font-bold uppercase">Great Kraken (100% Fruit)</span><input type="checkbox" id="toggleGreatKraken" class="w-4 h-4"></div>
+                         <ul class="text-sm space-y-1"><li class="flex justify-between"><span>Book of Spirits</span><span><span id="chance-k-spirits">45</span>%</span></li><li class="flex justify-between italic text-gray-500"><span>Ничего</span><span><span id="chance-k-nothing">30</span>%</span></li></ul>
+                         <div id="fruitChancesContainer" class="mt-2 border-t border-gray-700 pt-2">
+                            <div class="flex gap-4 mb-2">
+                                <div class="flex items-center"><span class="text-xs mr-1 text-yellow-400 font-bold">ASE</span><input type="checkbox" id="toggleASE" class="w-4 h-4"></div>
+                                <div class="flex items-center"><span class="text-xs mr-1 text-blue-400 font-bold">LOGIA</span><input type="checkbox" id="toggleLogia" class="w-4 h-4"></div>
+                            </div>
+                            <ul class="text-xs space-y-1">
+                                <li class="flex justify-between text-yellow-400"><span>Legendary</span> <span id="chanceLegendary">4</span>%</li>
+                                <li class="flex justify-between text-red-500 font-bold"><span>Mythical</span> <span id="chanceMythical">0.5</span>%</li>
+                            </ul>
+                         </div>
+                    </div>
+
+                    <div id="baalChances" class="chance-block hidden">
+                        <h4 class="text-xs font-bold text-gray-500 mb-2 uppercase">Шансы True Ba'al</h4>
+                        <ul class="space-y-1 text-sm">
+                            <li class="flex justify-between"><span class="text-yellow-400">Snake Fire</span> <span><span id="chance-b-fire">20</span>%</span></li>
+                            <li class="flex justify-between"><span class="text-purple-400">Snake Head</span> <span><span id="chance-b-head">5</span>%</span></li>
+                            <li class="flex justify-between"><span class="text-red-500 font-black italic animate-pulse">Prestige WE</span> <span><span id="chance-b-prestige">0.001</span>%</span></li>
+                            <li class="flex justify-between text-gray-500 italic"><span>Ничего</span> <span><span id="chance-b-nothing">62.999</span>%</span></li>
+                        </ul>
+                    </div>
+
+                    <div id="juzoChances" class="chance-block hidden">
+                        <h4 class="text-xs font-bold text-gray-500 mb-2 uppercase">Шансы Juzo</h4>
+                        <ul class="space-y-1 text-sm">
+                            <li class="flex justify-between"><span class="text-purple-400 font-bold">Kira Kira no Mi</span> <span><span id="chance-j-kira">5</span>%</span></li>
+                            <li class="flex justify-between"><span class="text-red-500 font-bold">Mythical Chest</span> <span><span id="chance-j-chest">0.5</span>%</span></li>
+                            <li class="flex justify-between text-gray-500 italic"><span>Ничего</span> <span><span id="chance-j-nothing">92.5</span>%</span></li>
+                        </ul>
+                    </div>
+
+                    <div id="hawkEyeChances" class="chance-block hidden">
+                        <h4 class="text-sm font-bold text-gray-500 mb-2 uppercase text-red-500">Шансы Hawk Eye</h4>
+                        <ul class="space-y-1 text-sm">
+                            <li class="flex justify-between"><span class="text-yellow-400 font-bold">Blueprint LFC</span> <span><span id="chance-h-blueprint">1</span>%</span></li>
+                            <li class="flex justify-between"><span class="text-red-500 font-bold">Dark Blade</span> <span><span id="chance-h-blade">0.5</span>%</span></li>
+                            <li class="flex justify-between text-gray-500 italic"><span>Ничего</span> <span><span id="chance-h-nothing">95.5</span>%</span></li>
+                        </ul>
+                    </div>
+
+                    <div id="rogerChances" class="chance-block hidden">
+                        <h4 class="text-sm font-bold text-gray-500 mb-2 uppercase text-yellow-500">Шансы Roger</h4>
+                        <ul class="space-y-1 text-sm">
+                            <li class="flex justify-between"><span class="text-yellow-400 font-bold">Blueprint LFC</span> <span><span id="chance-r-blueprint">1</span>%</span></li>
+                            <li class="flex justify-between"><span class="text-red-500 font-bold">Roger's Ace</span> <span><span id="chance-r-ace">0.5</span>%</span></li>
+                            <li class="flex justify-between text-gray-500 italic"><span>Ничего</span> <span><span id="chance-r-nothing">96.5</span>%</span></li>
+                        </ul>
+                    </div>
+
+                    <div id="lawChances" class="chance-block hidden">
+                        <h4 class="text-sm font-bold text-gray-500 mb-2 uppercase">Шансы Law</h4>
+                        <ul class="space-y-1 text-sm">
+                            <li class="flex justify-between"><span class="text-purple-400">Law's Outfit</span> <span><span id="chance-l-outfit">15</span>%</span></li>
+                            <li class="flex justify-between"><span class="text-red-500 font-bold">Kikoku</span> <span><span id="chance-l-kikoku">0.5</span>%</span></li>
+                            <li class="flex justify-between text-gray-500 italic"><span>Ничего</span> <span><span id="chance-l-nothing">63.5</span>%</span></li>
+                        </ul>
+                    </div>
+
+                    <div id="gravitoChances" class="chance-block hidden">
+                        <h4 class="text-sm font-bold text-gray-500 mb-2 uppercase text-cyan-400">Шансы Gravito</h4>
+                        <ul class="space-y-1 text-sm">
+                            <li class="flex justify-between"><span class="text-blue-400 font-semibold">Gravity Blade</span> <span><span id="chance-g-blade">15</span>%</span></li>
+                            <li class="flex justify-between"><span class="text-red-500 font-bold">Hoverboard</span> <span><span id="chance-g-hoverboard">1</span>%</span></li>
+                            <li class="flex justify-between text-gray-500 italic"><span>Ничего</span> <span><span id="chance-g-nothing">48</span>%</span></li>
+                        </ul>
+                    </div>
+
+                    <div id="christmasPresentsChances" class="chance-block hidden">
+                        <ul class="space-y-1 text-sm"><li class="flex justify-between"><span class="rainbow-text font-bold">Iceborn candy cane</span><span><span id="chance-xm-cane-ice">0.004</span>%</span></li><li class="flex justify-between text-gray-500 italic"><span>Ничего</span><span><span id="chance-xm-nothing">99.996</span>%</span></li></ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Право -->
+            <div class="lg:col-span-1 bg-gray-800 p-6 rounded-lg border border-gray-700 flex flex-col max-h-[85vh]">
+                <h3 class="text-xl font-bold mb-2 uppercase text-gray-500 tracking-tighter">История выпадения</h3>
+                <ul id="dropList" class="custom-scrollbar h-40 overflow-y-auto space-y-1 bg-gray-900 p-2 rounded mb-4"></ul>
+                
+                <div id="fruitCollectionContainer" class="flex flex-col flex-grow min-h-0 border-t border-gray-700 pt-4">
+                    <h3 class="text-xl font-bold mb-2 uppercase text-gray-500 tracking-tighter italic">Коллекция Режима</h3>
+                    <ul id="fruitCollectionList" class="custom-scrollbar flex-grow overflow-y-auto space-y-1 bg-gray-900 p-2 rounded"></ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
