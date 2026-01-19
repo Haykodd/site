@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CLAN ROLL</title>
+    
+    <!-- Подключаем Tailwind CSS для стилей -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Подключаем иконки FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Подключаем React и Babel (чтобы код работал прямо в браузере) -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Дополнительные стили -->
+    <style>
+        body { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+        .clip-path-slant { clip-path: polygon(10% 0, 100% 0, 90% 100%, 0% 100%); }
+        
+        /* Скрытие скроллбара */
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Анимации появления */
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes zoomIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
+        .animate-zoom-in { animation: zoomIn 0.3s ease-out forwards; }
+    </style>
+</head>
+<body class="bg-neutral-900 text-white overflow-hidden">
+
+    <div id="root"></div>
+ч   
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        // --- НАСТРОЙКИ КЛАНОВ ---
+        // Иконки заменены на классы FontAwesome (fas fa-...)
+        const ITEMS = [
+            // 🟡 GOD TIER (1%)
+            { id: 'otsutsuki', name: 'Otsutsuki', chance: 1.0, color: 'text-yellow-100', border: 'border-yellow-100', bg: 'bg-yellow-100/10', icon: 'fa-crown', tier: 'GOD' },
+            { id: 'uchiha',    name: 'Uchiha',    chance: 1.0, color: 'text-red-600',    border: 'border-red-600',    bg: 'bg-red-600/10',    icon: 'fa-fire', tier: 'LEGENDARY' },
+
+            // 🟣 MYTHICAL (2-3%)
+            { id: 'hyuga', name: 'Hyuga', chance: 2.0, color: 'text-purple-300', border: 'border-purple-300', bg: 'bg-purple-300/10', icon: 'fa-eye', tier: 'MYTHICAL' },
+            { id: 'lee',   name: 'Lee',   chance: 3.0, color: 'text-green-500',  border: 'border-green-500',  bg: 'bg-green-500/10',  icon: 'fa-bolt', tier: 'MYTHICAL' },
+            { id: 'senju', name: 'Senju', chance: 3.0, color: 'text-emerald-700', border: 'border-emerald-700', bg: 'bg-emerald-700/10', icon: 'fa-shield-halved', tier: 'MYTHICAL' },
+
+            // 🔵 RARE (6%)
+            { id: 'chinoike', name: 'Chinoike', chance: 6.0, color: 'text-rose-700',   border: 'border-rose-700',   bg: 'bg-rose-700/10',   icon: 'fa-droplet', tier: 'RARE' },
+            { id: 'uzumaki',  name: 'Uzumaki',  chance: 6.0, color: 'text-orange-500', border: 'border-orange-500', bg: 'bg-orange-500/10', icon: 'fa-wind', tier: 'RARE' },
+
+            // 🟢 UNCOMMON (10%)
+            { id: 'aburame',   name: 'Aburame',   chance: 10.0, color: 'text-slate-600', border: 'border-slate-600', bg: 'bg-slate-600/10', icon: 'fa-bug', tier: 'UNCOMMON' },
+            { id: 'zetsu',     name: 'Zetsu',     chance: 10.0, color: 'text-lime-400',  border: 'border-lime-400',  bg: 'bg-lime-400/10',  icon: 'fa-ghost', tier: 'UNCOMMON' },
+            { id: 'hoshigaki', name: 'Hoshigaki', chance: 10.0, color: 'text-cyan-500',  border: 'border-cyan-500',  bg: 'bg-cyan-500/10',  icon: 'fa-cloud-showers-heavy', tier: 'UNCOMMON' },
+
+            // ⚪ COMMON (16%)
+            { id: 'haruno',   name: 'Haruno',   chance: 16.0, color: 'text-pink-400',   border: 'border-pink-400',   bg: 'bg-pink-400/10',   icon: 'fa-heart', tier: 'COMMON' },
+            { id: 'ayrui',    name: 'Ayrui',    chance: 16.0, color: 'text-yellow-400', border: 'border-yellow-400', bg: 'bg-yellow-400/10', icon: 'fa-bolt-lightning', tier: 'COMMON' },
+            { id: 'akimichi', name: 'Akimichi', chance: 16.0, color: 'text-red-400',    border: 'border-red-400',    bg: 'bg-red-400/10',    icon: 'fa-circle', tier: 'COMMON' },
+        ];
+
+        const CARD_WIDTH = 160; 
+        const GAP = 16;         
+
+        function App() {
+            const [isSpinning, setIsSpinning] = useState(false);
+            const [reel, setReel] = useState([]);
+            const [winner, setWinner] = useState(null);
+            const [history, setHistory] = useState([]);
+            const [isDropsOpen, setIsDropsOpen] = useState(false);
+            const reelContainerRef = useRef(null);
+            
+            useEffect(() => {
+                setReel(generateInitialReel());
+            }, []);
+
+            const getRandomItem = () => {
+                const totalChance = ITEMS.reduce((sum, item) => sum + item.chance, 0);
+                let random = Math.random() * totalChance;
+                
+                for (const item of ITEMS) {
+                    if (random < item.chance) {
+                        return item;
+                    }
+                    random -= item.chance;
+                }
+                return ITEMS[0];
+            };
+
+            const generateInitialReel = () => {
+                return Array.from({ length: 15 }).map((_, i) => ({
+                    ...getRandomItem(),
+                    uniqueId: `init-${i}`
+                }));
+            };
+
+            const spin = () => {
+                if (isSpinning) return;
+                
+                setIsSpinning(true);
+                setWinner(null);
+
+                const winItem = getRandomItem();
+                const WIN_INDEX = 45; 
+                const newReel = [];
+                
+                for (let i = 0; i < 60; i++) {
+                    if (i === WIN_INDEX) {
+                        newReel.push({ ...winItem, uniqueId: `win-${Date.now()}` });
+                    } else {
+                        newReel.push({ ...getRandomItem(), uniqueId: `spin-${Date.now()}-${i}` });
+                    }
+                }
+                setReel(newReel);
+
+                if (reelContainerRef.current) {
+                    reelContainerRef.current.style.transition = 'none';
+                    reelContainerRef.current.style.transform = 'translateX(0px)';
+                }
+
+                requestAnimationFrame(() => {
+                    if (reelContainerRef.current) {
+                        const jitter = Math.floor(Math.random() * (CARD_WIDTH - 30)) - (CARD_WIDTH / 2 - 15);
+                        const cardCenterOffset = CARD_WIDTH / 2;
+                        const winningCardLeftPos = WIN_INDEX * (CARD_WIDTH + GAP);
+                        const finalTranslate = -(winningCardLeftPos + cardCenterOffset + jitter);
+
+                        reelContainerRef.current.style.transition = 'transform 5s cubic-bezier(0.12, 0.8, 0.1, 1)';
+                        reelContainerRef.current.style.transform = `translateX(${finalTranslate}px)`;
+                    }
+                });
+
+                setTimeout(() => {
+                    setIsSpinning(false);
+                    setWinner(winItem);
+                    setHistory(prev => [winItem, ...prev].slice(0, 8));
+                }, 5000);
+            };
+
+            return (
+                <div className="min-h-screen bg-neutral-900 text-white font-sans flex flex-col items-center justify-center p-4 overflow-hidden relative">
+                    
+                    {/* Background Pattern */}
+                    <div className="fixed inset-0 pointer-events-none opacity-20">
+                        <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-slate-800 via-neutral-900 to-black"></div>
+                    </div>
+
+                    {/* 📜 LIST OF DROPS BUTTON */}
+                    <div className="absolute top-6 left-6 z-50">
+                        <button
+                            onClick={() => setIsDropsOpen(true)}
+                            className="flex items-center gap-2 bg-neutral-900/80 backdrop-blur border border-neutral-700 px-4 py-2 rounded-full shadow-xl hover:bg-neutral-800 transition-colors group animate-fade-in"
+                        >
+                            <i className="fas fa-list text-neutral-400 group-hover:text-white transition-colors"></i>
+                            <span className="text-xs font-bold text-neutral-400 uppercase tracking-wider group-hover:text-white transition-colors">Drops</span>
+                        </button>
+                    </div>
+
+                    {/* 💰 BALANCE */}
+                    <div className="absolute top-6 right-6 z-50 flex items-center gap-3 bg-neutral-900/80 backdrop-blur border border-neutral-700 px-5 py-2 rounded-full shadow-xl animate-fade-in">
+                        <div className="bg-yellow-500/20 p-1.5 rounded-full w-8 h-8 flex items-center justify-center">
+                            <i className="fas fa-coins text-yellow-500 text-sm"></i>
+                        </div>
+                        <div className="flex flex-col leading-none">
+                            <span className="text-[10px] text-neutral-400 font-bold uppercase tracking-wider">Balance</span>
+                            <span className="text-lg font-black text-white tracking-widest flex items-center gap-1">
+                                ∞ <span className="text-sm text-yellow-500">RB</span>
+                            </span>
+                        </div>
+                    </div>
+
+                    <h1 className="text-5xl font-black mb-12 tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-white to-red-500 uppercase drop-shadow-[0_0_10px_rgba(220,38,38,0.8)] z-10 text-center italic">
+                        CLAN ROLL
+                    </h1>
+
+                    {/* ROULETTE AREA */}
+                    <div className="relative w-full max-w-5xl h-64 bg-black/60 backdrop-blur-sm rounded-lg border-y-4 border-red-900 shadow-2xl overflow-hidden mb-12 flex flex-col justify-center z-20">
+                        
+                        {/* Pointer */}
+                        <div className="absolute left-1/2 top-0 bottom-0 w-[4px] bg-red-600 z-40 shadow-[0_0_20px_rgba(220,38,38,1)] -translate-x-1/2"></div>
+                        <div className="absolute top-0 left-1/2 -translate-x-1/2 -mt-1 text-red-600 z-40 text-2xl drop-shadow-lg">▼</div>
+
+                        {/* Side Shadows */}
+                        <div className="absolute inset-y-0 left-0 w-48 bg-gradient-to-r from-neutral-900 to-transparent z-30 pointer-events-none"></div>
+                        <div className="absolute inset-y-0 right-0 w-48 bg-gradient-to-l from-neutral-900 to-transparent z-30 pointer-events-none"></div>
+
+                        <div 
+                            ref={reelContainerRef}
+                            className="flex items-center px-[50%]"
+                            style={{ gap: `${GAP}px`, willChange: 'transform' }}
+                        >
+                            {reel.map((item, index) => (
+                                <div 
+                                    key={item.uniqueId}
+                                    className={`
+                                        flex-shrink-0 rounded border-2 ${item.border} bg-neutral-800
+                                        flex flex-col items-center justify-between p-3 relative group
+                                        shadow-lg
+                                    `}
+                                    style={{ width: `${CARD_WIDTH}px`, height: '208px' }}
+                                >
+                                    {/* Tier Label */}
+                                    <div className="w-full text-center">
+                                        <span className={`text-[9px] font-bold uppercase tracking-widest ${item.color} opacity-60`}>{item.tier}</span>
+                                    </div>
+
+                                    {/* Icon */}
+                                    <div className={`transform group-hover:scale-110 transition-transform duration-300 ${item.color} drop-shadow-[0_0_8px_rgba(255,255,255,0.1)] text-5xl`}>
+                                        <i className={`fas ${item.icon}`}></i>
+                                    </div>
+                                    
+                                    {/* Name & Chance */}
+                                    <div className="text-center w-full bg-black/40 py-2 rounded">
+                                        <p className={`font-black text-sm uppercase leading-tight ${item.color} tracking-wider truncate`}>{item.name}</p>
+                                        <p className="text-[10px] text-neutral-500 mt-1">{item.chance}%</p>
+                                    </div>
+
+                                    {/* BG Glow */}
+                                    <div className={`absolute inset-0 bg-gradient-to-b ${item.bg.replace('/10', '/5')} to-transparent pointer-events-none`}></div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* SPIN BUTTON */}
+                    <button
+                        onClick={spin}
+                        disabled={isSpinning}
+                        className={`
+                            relative px-16 py-4 rounded-sm transition-all duration-300
+                            uppercase tracking-widest clip-path-slant group
+                            ${isSpinning 
+                                ? 'bg-neutral-800 text-neutral-600 cursor-not-allowed border-2 border-neutral-700' 
+                                : 'bg-red-600 hover:bg-red-500 text-white shadow-[0_0_30px_rgba(220,38,38,0.5)] border-2 border-red-500 hover:scale-105 active:scale-95'
+                            }
+                        `}
+                    >
+                         <div className="relative z-10 flex items-center justify-center gap-4">
+                            {isSpinning ? (
+                                <span className="text-2xl font-black">Summoning...</span>
+                            ) : (
+                                <>
+                                    <span className="text-2xl font-black">Summon</span>
+                                    <div className="h-8 w-[1px] bg-red-400/50"></div>
+                                    <div className="flex flex-col items-start leading-none">
+                                        <span className="text-[10px] font-bold text-red-100 opacity-80 mb-0.5">COST</span>
+                                        <div className="flex items-center gap-1">
+                                            <span className="text-xl font-black text-yellow-300 drop-shadow-sm">200</span>
+                                            <span className="text-xs font-bold text-yellow-500">RB</span>
+                                        </div>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                    </button>
+
+                    {/* DROPS MODAL */}
+                    {isDropsOpen && (
+                        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/95 backdrop-blur-md animate-fade-in p-4">
+                            <div className="relative w-full max-w-5xl h-[85vh] bg-neutral-900 border border-neutral-700 rounded-lg flex flex-col shadow-2xl overflow-hidden animate-zoom-in">
+                                {/* Header */}
+                                <div className="flex items-center justify-between p-6 border-b border-neutral-800 bg-neutral-900 z-10">
+                                    <h2 className="text-3xl font-black text-white uppercase tracking-widest flex items-center gap-3 italic">
+                                        <span className="text-red-600">Clan</span> Drops
+                                    </h2>
+                                    <button
+                                        onClick={() => setIsDropsOpen(false)}
+                                        className="w-10 h-10 flex items-center justify-center hover:bg-neutral-800 rounded-full transition-colors text-neutral-500 hover:text-white"
+                                    >
+                                        <i className="fas fa-times text-xl"></i>
+                                    </button>
+                                </div>
+
+                                {/* Grid */}
+                                <div className="overflow-y-auto p-6 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 scrollbar-hide">
+                                    {ITEMS.map((item) => (
+                                        <div
+                                            key={item.id}
+                                            className={`
+                                                relative flex flex-col items-center justify-between p-4 rounded border ${item.border} bg-neutral-800/40 hover:bg-neutral-800 transition-colors group h-60
+                                            `}
+                                        >
+                                             <div className={`absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b ${item.bg.replace('/10','/20')} to-transparent opacity-0 group-hover:opacity-100 transition-opacity`}></div>
+
+                                            <div className="w-full flex justify-between items-start z-10">
+                                                <span className={`text-[9px] font-bold uppercase tracking-widest ${item.color} opacity-80 border border-current px-1.5 py-0.5 rounded`}>{item.tier}</span>
+                                                <span className={`text-xs font-bold text-white bg-black/50 px-2 py-0.5 rounded`}>{item.chance}%</span>
+                                            </div>
+
+                                            <div className={`my-4 transform group-hover:scale-110 transition-transform duration-300 ${item.color} drop-shadow-[0_0_10px_rgba(255,255,255,0.1)] z-10 text-5xl`}>
+                                                <i className={`fas ${item.icon}`}></i>
+                                            </div>
+
+                                            <div className="text-center w-full z-10">
+                                                <p className={`font-black text-sm uppercase ${item.color} truncate tracking-wider`}>{item.name}</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* WINNER MODAL */}
+                    {winner && !isSpinning && (
+                        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/95 backdrop-blur-md animate-fade-in p-4">
+                            <div className={`relative w-full max-w-sm bg-neutral-900 border-2 ${winner.border} rounded p-1 flex flex-col items-center text-center shadow-[0_0_100px_rgba(0,0,0,1)] animate-zoom-in`}>
+                                
+                                <div className="bg-neutral-800 w-full h-full rounded p-8 flex flex-col items-center relative overflow-hidden">
+                                    {/* Background Burst */}
+                                    <div className={`absolute top-0 left-0 w-full h-full opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-current to-transparent pointer-events-none ${winner.color}`}></div>
+
+                                    <div className="uppercase tracking-widest text-neutral-500 text-xs font-bold mb-2">You obtained</div>
+                                    <h2 className={`text-4xl font-black ${winner.color} mb-6 uppercase tracking-wider drop-shadow-md relative z-10`}>{winner.name}</h2>
+                                    
+                                    <div className={`mb-8 relative z-10 p-6 rounded-full border-4 ${winner.border} bg-black/30 shadow-[0_0_30px_rgba(255,255,255,0.1)]`}>
+                                        <i className={`fas ${winner.icon} ${winner.color} text-7xl`}></i>
+                                    </div>
+                                    
+                                    <div className="flex items-center gap-2 mb-8 relative z-10 bg-black/40 px-4 py-2 rounded-full border border-neutral-700">
+                                        <span className={`text-xs font-bold ${winner.color}`}>{winner.tier} CLAN</span>
+                                        <span className="text-neutral-600">|</span>
+                                        <span className="text-xs text-neutral-400">{winner.chance}% Chance</span>
+                                    </div>
+                                    
+                                    <button 
+                                        onClick={() => setWinner(null)}
+                                        className="w-full py-4 rounded-sm bg-neutral-700 hover:bg-neutral-600 text-white font-bold uppercase tracking-widest transition-colors relative z-10"
+                                    >
+                                        Accept
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                    
+                    {/* HISTORY */}
+                    <div className="absolute bottom-6 w-full flex justify-center gap-2 px-4 overflow-x-auto scrollbar-hide">
+                        {history.map((h, i) => (
+                            <div key={i} className={`flex-shrink-0 w-16 h-16 rounded border ${h.border} bg-neutral-900 flex flex-col items-center justify-center shadow shadow-black`}>
+                                <i className={`fas ${h.icon} ${h.color} mb-1`}></i>
+                                <span className="text-[9px] text-neutral-500 uppercase">{h.name.slice(0,3)}</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
