@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The International 2026</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #1a1611;
+            --text-main: #d4b572;
+            --text-muted: #8c764e;
+            --box-bg: rgba(0, 0, 0, 0.85);
+            --box-border: #4a3c22;
+            --hover-bg: rgba(212, 181, 114, 0.15);
+            --winner-bg: rgba(212, 181, 114, 0.3);
+            --line-color: #776545; /* Сделал цвет линий более приглушенным, как на картинке */
+        }
+
+        body {
+            font-family: 'Roboto Condensed', sans-serif;
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(circle at 50% 0%, rgba(212, 181, 114, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 50% 100%, rgba(212, 181, 114, 0.1) 0%, transparent 50%);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            overflow-x: auto;
+        }
+
+        .container-main {
+            width: max-content;
+            padding: 2rem 4rem;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            text-align: center;
+            font-weight: 700;
+            letter-spacing: 2px;
+            margin-bottom: 3rem;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+        }
+
+        /* --- НОВЫЙ МАКЕТ --- */
+        .bracket-layout {
+            display: flex;
+            gap: 120px; /* Идеальное расстояние между всеми колонками */
+            position: relative;
+        }
+
+        .brackets-left {
+            display: flex;
+            flex-direction: column;
+            gap: 60px; /* Отступ между верхней и нижней сеткой */
+        }
+
+        .bracket-section {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .section-title {
+            font-size: 2.2rem;
+            font-weight: 700;
+            border-bottom: 2px solid var(--text-main);
+            padding-bottom: 0.5rem;
+            margin-bottom: 2rem;
+            display: inline-block;
+            align-self: flex-start;
+        }
+
+        .round-headers {
+            display: flex;
+            margin-bottom: 1rem;
+            gap: 120px;
+        }
+
+        .round-title {
+            width: 220px;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .bracket-grid {
+            display: flex;
+            gap: 120px;
+        }
+
+        .round {
+            display: flex;
+            flex-direction: column;
+            width: 220px;
+            position: relative;
+            z-index: 2; /* Выше, чем линии */
+        }
+        
+        /* Распределение матчей по вертикали */
+        .ub-round-1 { gap: 40px; justify-content: flex-start; }
+        .ub-round-2 { justify-content: space-around; padding: 60px 0; }
+        .ub-round-3 { justify-content: center; }
+        .ub-round-4-spacer { width: 220px; } /* Пустая колонка для выравнивания */
+
+        .lb-round-1 { gap: 40px; justify-content: flex-start; }
+        .lb-round-2 { gap: 40px; justify-content: flex-start; }
+        .lb-round-3 { justify-content: center; padding-bottom: 40px; }
+        .lb-round-4 { justify-content: center; }
+
+        .grand-final-col {
+            display: flex;
+            flex-direction: column;
+            justify-content: center; /* Центрируем по вертикали относительно всей высоты */
+            width: 250px;
+            z-index: 2;
+            padding-top: 100px; /* Небольшой сдвиг для идеальной гармонии */
+        }
+
+        .match {
+            background-color: var(--box-bg);
+            border: 1px solid var(--box-border);
+            border-radius: 2px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.5);
+            position: relative;
+            z-index: 5; /* Гарантируем, что матчи перекрывают линии */
+        }
+
+        .team {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            height: 42px;
+            border-bottom: 1px solid #2a2215;
+            position: relative;
+            overflow: hidden;
+        }
+        .team:last-child { border-bottom: none; }
+
+        .team:hover:not(.empty) {
+            background-color: var(--hover-bg);
+        }
+
+        .team.winner {
+            background-color: var(--winner-bg);
+            font-weight: 700;
+            color: #fff;
+        }
+        .team.winner::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background-color: var(--text-main);
+        }
+
+        .team.loser {
+            color: #666;
+        }
+        .team.loser .logo-container {
+            filter: grayscale(100%) opacity(0.3);
+        }
+
+        .team.empty {
+            cursor: default;
+            color: #776545;
+        }
+
+        .logo-container {
+            width: 20px;
+            height: 20px;
+            margin-right: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        
+        .logo-placeholder {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background-color: #333;
+            display: inline-block;
+            text-align: center;
+            line-height: 18px;
+        }
+        .logo-text { font-size: 9px; font-weight: bold; color: #fff;}
+        .empty-logo { font-size: 14px; font-weight: bold; color: #776545; }
+
+        .team-name {
+            font-size: 1rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            user-select: none;
+        }
+
+        svg.lines-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1; /* Линии ВСЕГДА под матчами */
+            overflow: visible;
+        }
+        
+        .bracket-line {
+            fill: none;
+            stroke: var(--line-color);
+            stroke-width: 1.5;
+            stroke-dasharray: 4 3; /* Пунктирная линия как на картинке */
+            opacity: 0.8;
+        }
+
+        .controls {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+        }
+        button.reset {
+            background-color: var(--text-main);
+            color: var(--bg-color);
+            border: none;
+            padding: 10px 20px;
+            font-size: 1rem;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+            transition: background 0.2s;
+        }
+        button.reset:hover {
+            background-color: #ebd193;
+        }
+
+        #message-box {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--box-bg);
+            border: 2px solid var(--text-main);
+            padding: 40px;
+            text-align: center;
+            z-index: 1000;
+            box-shadow: 0 0 50px rgba(0,0,0,0.9);
+            border-radius: 8px;
+        }
+        #message-box h2 { margin: 0 0 20px 0; font-size: 2.5rem; color: #fff;}
+        #message-box p { font-size: 1.8rem; margin-bottom: 30px; color: var(--text-main);}
+        #message-box button {
+            background: var(--text-main); color: var(--bg-color);
+            border: none; padding: 12px 40px; font-weight: bold; cursor: pointer;
+            border-radius: 4px; font-size: 1.2rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="controls">
+        <button class="reset" onclick="resetBracket()">СБРОСИТЬ СЕТКУ</button>
+    </div>
+
+    <div id="message-box">
+        <h2>ПОБЕДИТЕЛЬ TI26!</h2>
+        <p id="winner-name">Команда</p>
+        <button onclick="document.getElementById('message-box').style.display='none'">Закрыть</button>
+    </div>
+
+    <div class="container-main" id="app-container">
+        <h1>THE INTERNATIONAL 2026</h1>
+
+        <!-- ЕДИНЫЙ SVG ДЛЯ ВСЕХ ЛИНИЙ -->
+        <svg id="bracket-lines" class="lines-container"></svg>
+
+        <div class="bracket-layout">
+            
+            <!-- ЛЕВАЯ ЧАСТЬ: ВЕРХНЯЯ И НИЖНЯЯ СЕТКИ -->
+            <div class="brackets-left">
+                
+                <!-- UPPER BRACKET -->
+                <div class="bracket-section">
+                    <div class="section-title">ВЕРХНЯЯ СЕТКА</div>
+                    
+                    <div class="round-headers">
+                        <div class="round-title">РАУНД 1</div>
+                        <div class="round-title">РАУНД 2</div>
+                        <div class="round-title">ФИНАЛ ВЕРХНЕЙ СЕТКИ</div>
+                        <div class="round-title empty-header"></div> <!-- Пустое место для выравнивания -->
+                    </div>
+
+                    <div class="bracket-grid">
+                        <!-- Round 1 -->
+                        <div class="round ub-round-1">
+                            <div class="match" id="ub-r1-m1" data-next="ub-r2-m1" data-next-slot="0" data-drop="lb-r1-m1" data-drop-slot="0">
+                                <div class="team" onclick="selectWinner(this, 0)">
+                                    <div class="logo-container"><div class="logo-placeholder" style="background:#555;"><span class="logo-text">IW</span></div></div>
+                                    <div class="team-name" data-full-name="IRON WING">IRON WING</div>
+                                </div>
+                                <div class="team" onclick="selectWinner(this, 1)">
+                                    <div class="logo-container"><div class="logo-placeholder" style="background:#4CAF50;"><span class="logo-text">TS</span></div></div>
+                                    <div class="team-name" data-full-name="TEAM SPIRIT">TEAM SPIRIT</div>
+                                </div>
+                            </div>
+                            <div class="match" id="ub-r1-m2" data-next="ub-r2-m1" data-next-slot="1" data-drop="lb-r1-m1" data-drop-slot="1">
+                                <div class="team" onclick="selectWinner(this, 0)">
+                                    <div class="logo-container"><div class="logo-placeholder" style="background:#00BCD4;"><span class="logo-text">TV</span></div></div>
+                                    <div class="team-name" data-full-name="TEAM VISION">TEAM VISION</div>
+                                </div>
+                                <div class="team" onclick="selectWinner(this, 1)">
+                                    <div class="logo-container"><div class="logo-placeholder" style="background:#F44336;"><span class="logo-text">BB</span></div></div>
+                                    <div class="team-name" data-full-name="BOOMBOYS">BOOMBOYS</div>
+                                </div>
+                            </div>
+                            <div class="match" id="ub-r1-m3" data-next="ub-r2-m2" data-next-slot="0" data-drop="lb-r1-m2" data-drop-slot="0">
+                                <div class="team" onclick="selectWinner(this, 0)">
+                                    <div class="logo-container"><div class="logo-placeholder" style="background:#2196F3;"><span class="logo-text">TL</span></div></div>
+                                    <div class="team-name" data-full-name="TEAM LIQUID">TEAM LIQUID</div>
+                                </div>
+                                <div class="team" onclick="selectWinner(this, 1)">
+                                    <div class="logo-container"><div class="logo-placeholder" style="background:#ff9800;"><span class="logo-text">TY</span></div></div>
+                                    <div class="team-name" data-full-name="TEAM YANDEX">TEAM YANDEX</div>
+                                </div>
+                            </div>
+                            <div class="match" id="ub-r1-m4" data-next="ub-r2-m2" data-next-slot="1" data-drop="lb-r1-m2" data-drop-slot="1">
+                                <div class="team" onclick="selectWinner(this, 0)">
+                                    <div class="logo-container"><div class="logo-placeholder" style="background:#9C27B0;"><span class="logo-text">NG</span></div></div>
+                                    <div class="team-name" data-full-name="NIGMA GALAXY">NIGMA GALAXY</div>
+                                </div>
+                                <div class="team" onclick="selectWinner(this, 1)">
+                                    <div class="logo-container"><div class="logo-placeholder" style="background:#8BC34A;"><span class="logo-text">TF</span></div></div>
+                                    <div class="team-name" data-full-name="TEAM FALCONS">TEAM FALCONS</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Round 2 -->
+                        <div class="round ub-round-2">
+                            <div class="match" id="ub-r2-m1" data-next="ub-r3-m1" data-next-slot="0" data-drop="lb-r2-m1" data-drop-slot="0">
+                                <div class="team empty" onclick="selectWinner(this, 0)">
+                                    <div class="logo-container"><span class="empty-logo">Q</span></div>
+                                    <div class="team-name">TBD</div>
+                                </div>
+                                <div class="team empty" onclick="selectWinner(this, 1)">
+                                    <div class="logo-container"><span class="empty-logo">Q</span></div>
+                                    <div class="team-name">TBD</div>
+                                </div>
+                            </div>
+                            <div class="match" id="ub-r2-m2" data-next="ub-r3-m1" data-next-slot="1" data-drop="lb-r2-m2" data-drop-slot="0">
+                                <div class="team empty" onclick="selectWinner(this, 0)">
+                                    <div class="logo-container"><span class="empty-logo">Q</span></div>
+                                    <div class="team-name">TBD</div>
+                                </div>
+                                <div class="team empty" onclick="selectWinner(this, 1)">
+                                    <div class="logo-container"><span class="empty-logo">Q</span></div>
+                                    <div class="team-name">TBD</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Round 3 (UB Final) -->
+                        <div class="round ub-round-3">
+                            <div class="match" id="ub-r3-m1" data-next="grand-final" data-next-slot="0" data-drop="lb-r4-m1" data-drop-slot="1">
+                                <div class="team empty" onclick="selectWinner(this, 0)">
+                                    <div class="logo-container"><span class="empty-logo">Q</span></div>
+                                    <div class="team-name">TBD</div>
+                                </div>
+                                <div class="team empty" onclick="selectWinner(this, 1)">
+                                    <div class="logo-container"><span class="empty-logo">Q</span></div>
+                                    <div class="team-name">TBD</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Пустая колонка для выравнивания с 4 колонками нижней сетки -->
+                        <div class="round ub-round-4-spacer"></div>
+                    </div>
+                </div>
+
+                <!-- LOWER BRACKET -->
+                <div class="bracket-section">
+                    <div class="section-title">НИЖНЯЯ СЕТКА</div>
+                    
+                    <div class="round-headers">
+                        <div class="round-title">РАУНД 1</div>
+                        <div class="round-title">РАУНД 2</div>
+                        <div class="round-title">РАУНД 3</div>
+                        <div class="round-title">ФИНАЛ НИЖНЕЙ СЕТКИ</div>
+                    </div>
+
+                    <div class="bracket-grid">
+                        <!-- LB Round 1 -->
+                        <div class="round lb-round-1">
+                            <div class="match" id="lb-r1-m1" data-next="lb-r2-m1" data-next-slot="1">
+                                <div class="team empty" onclick="selectWinner(this, 0, true)">
+                                    <div class="logo-container"><span class="empty-logo">Q</span></div>
+                                    <div class="team-name">TBD</div>
+                                </div>
+                                <div class="team empty" onclick="selectWinner(this, 1, true)">
+                                    <div class="logo-container"><span class="empty-logo">Q</span></div>
+                                    <div class="team-name">TBD</div>
+                                </div>
+                            </div>
+                            <div class="match" id="lb-r1-m2" data-next="lb-r2-m2" data-next-slot="1">
+                                <div class="team empty" onclick="selectWinner(this, 0, true)">
+                                    <div class="logo-container"><span class="empty-logo">Q</span></div>
+                                    <div class="team-name">TBD</div>
+                                </div>
+                                <div class="team empty" onclick="selectWinner(this, 1, true)">
+                                    <div class="logo-container"><span class="empty-logo">Q</span></div>
+                                    <div class="team-name">TBD</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- LB Round 2 -->
+                        <div class="round lb-round-2">
+                            <div class="match" id="lb-r2-m1" data-next="lb-r3-m1" data-next-slot="0">
+                                <div class="team empty" onclick="selectWinner(this, 0, true)">
+                                    <div class="logo-container"><span class="empty-logo">Q</span></div>
+                                    <div class="team-name">TBD</div>
+                                </div>
+                                <div class="team empty" onclick="selectWinner(this, 1, true)">
+                                    <div class="logo-container"><span class="empty-logo">Q</span></div>
+                                    <div class="team-name">TBD</div>
+                                </div>
+                            </div>
+                            <div class="match" id="lb-r2-m2" data-next="lb-r3-m1" data-next-slot="1">
+                                <div class="team empty" onclick="selectWinner(this, 0, true)">
+                                    <div class="logo-container"><span class="empty-logo">Q</span></div>
+                                    <div class="team-name">TBD</div>
+                                </div>
+                                <div class="team empty" onclick="selectWinner(this, 1, true)">
+                                    <div class="logo-container"><span class="empty-logo">Q</span></div>
+                                    <div class="team-name">TBD</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- LB Round 3 -->
+                        <div class="round lb-round-3">
+                            <div class="match" id="lb-r3-m1" data-next="lb-r4-m1" data-next-slot="0">
+                                <div class="team empty" onclick="selectWinner(this, 0, true)">
+                                    <div class="logo-container"><span class="empty-logo">Q</span></div>
+                                    <div class="team-name">TBD</div>
+                                </div>
+                                <div class="team empty" onclick="selectWinner(this, 1, true)">
+                                    <div class="logo-container"><span class="empty-logo">Q</span></div>
+                                    <div class="team-name">TBD</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- LB Final -->
+                        <div class="round lb-round-4">
+                            <div class="match" id="lb-r4-m1" data-next="grand-final" data-next-slot="1">
+                                <div class="team empty" onclick="selectWinner(this, 0, true)">
+                                    <div class="logo-container"><span class="empty-logo">Q</span></div>
+                                    <div class="team-name">TBD</div>
+                                </div>
+                                <div class="team empty" onclick="selectWinner(this, 1, true)">
+                                    <div class="logo-container"><span class="empty-logo">Q</span></div>
+                                    <div class="team-name">TBD</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div> <!-- End of Brackets Left -->
+
+            <!-- GRAND FINAL COLUMN (Колонка 5) -->
+            <div class="grand-final-col">
+                <div class="round-title" style="margin-bottom: 10px;">ГРАНД-ФИНАЛ</div>
+                <div class="match" id="grand-final">
+                    <div class="team empty" onclick="declareChampion(this, 0)">
+                        <div class="logo-container"><span class="empty-logo">Q</span></div>
+                        <div class="team-name">TBD</div>
+                    </div>
+                    <div class="team empty" onclick="declareChampion(this, 1)">
+                        <div class="logo-container"><span class="empty-logo">Q</span></div>
+                        <div class="team-name">TBD</div>
+                    </div>
+                </div>
+            </div>
+
+        </div> <!-- End of Bracket Layout -->
+    </div>
+
+    <script>
+        let initialStateHTML = '';
+        
+        window.addEventListener('load', () => {
+            initialStateHTML = document.getElementById('app-container').innerHTML;
+            drawLines();
+        });
+        
+        window.addEventListener('resize', drawLines);
+
+        function resetBracket() {
+            document.getElementById('app-container').innerHTML = initialStateHTML;
+            document.getElementById('message-box').style.display = 'none';
+            setTimeout(drawLines, 50);
+        }
+
+        function selectWinner(element, index, isLowerBracket = false) {
+            if (element.classList.contains('empty')) return;
+
+            const match = element.closest('.match');
+            const teams = match.querySelectorAll('.team');
+            const winningIndex = index;
+            const losingIndex = index === 0 ? 1 : 0;
+            const winnerEl = teams[winningIndex];
+            const loserEl = teams[losingIndex];
+
+            winnerEl.classList.add('winner');
+            winnerEl.classList.remove('loser');
+            
+            if (!loserEl.classList.contains('empty')) {
+                loserEl.classList.add('loser');
+                loserEl.classList.remove('winner');
+            }
+
+            const nextMatchId = match.getAttribute('data-next');
+            const nextSlotIndex = parseInt(match.getAttribute('data-next-slot'));
+            
+            if (nextMatchId) {
+                const nextMatch = document.getElementById(nextMatchId);
+                if (nextMatch) {
+                    const nextTeamSlot = nextMatch.querySelectorAll('.team')[nextSlotIndex];
+                    nextTeamSlot.innerHTML = winnerEl.innerHTML;
+                    nextTeamSlot.className = 'team'; 
+                }
+            }
+
+            if (!isLowerBracket && !loserEl.classList.contains('empty')) {
+                const dropMatchId = match.getAttribute('data-drop');
+                const dropSlotIndex = parseInt(match.getAttribute('data-drop-slot'));
+                
+                if (dropMatchId) {
+                    const dropMatch = document.getElementById(dropMatchId);
+                    if (dropMatch) {
+                        const dropTeamSlot = dropMatch.querySelectorAll('.team')[dropSlotIndex];
+                        dropTeamSlot.innerHTML = loserEl.innerHTML;
+                        dropTeamSlot.className = 'team';
+                    }
+                }
+            }
+        }
+
+        function declareChampion(element, index) {
+             if (element.classList.contains('empty')) return;
+             
+             const match = element.closest('.match');
+             const teams = match.querySelectorAll('.team');
+             const winningIndex = index;
+             const losingIndex = index === 0 ? 1 : 0;
+             
+             teams[winningIndex].classList.add('winner');
+             teams[winningIndex].classList.remove('loser');
+             
+             if (!teams[losingIndex].classList.contains('empty')) {
+                 teams[losingIndex].classList.add('loser');
+                 teams[losingIndex].classList.remove('winner');
+             }
+
+             setTimeout(() => {
+                 const winnerNameEl = teams[winningIndex].querySelector('.team-name');
+                 const fullName = winnerNameEl.getAttribute('data-full-name') || winnerNameEl.innerText;
+                 document.getElementById('winner-name').innerText = fullName;
+                 document.getElementById('message-box').style.display = 'block';
+             }, 300);
+        }
+
+        function drawLines() {
+            const svg = document.getElementById('bracket-lines');
+            if (!svg) return;
+            const containerRect = document.getElementById('app-container').getBoundingClientRect();
+            let svgContent = '';
+
+            // Вспомогательная функция для получения точных координат относительно контейнера
+            function getPos(id) {
+                const el = document.getElementById(id);
+                if (!el) return null;
+                const rect = el.getBoundingClientRect();
+                return {
+                    left: rect.left - containerRect.left,
+                    right: rect.right - containerRect.left,
+                    top: rect.top - containerRect.top,
+                    bottom: rect.bottom - containerRect.top,
+                    middleY: (rect.top + rect.bottom) / 2 - containerRect.top,
+                    el: el
+                };
+            }
+
+            // Функция отрисовки линии от матча к матчу
+            function drawConnection(srcId, tgtId, isGf = false, gfSlot = 0) {
+                const src = getPos(srcId);
+                const tgt = getPos(tgtId);
+                if (!src || !tgt) return;
+
+                const startX = src.right;
+                const startY = src.middleY;
+                
+                // Целевая координата X - строго ВНЕШНЯЯ ЛЕВАЯ ГРАНИЦА целевого блока матча!
+                // Никакого пересечения текста не будет, так как блок матча имеет z-index: 5 и фон.
+                const endX = tgt.left - 2; // -2px для легкого нахлеста с бордером, чтобы не было зазора
+
+                let endY = tgt.middleY;
+
+                // Для Гранд-финала ведем линию к конкретному слоту команды
+                if (isGf) {
+                    const slots = tgt.el.querySelectorAll('.team');
+                    if (slots[gfSlot]) {
+                        const slotRect = slots[gfSlot].getBoundingClientRect();
+                        // Точно в середину высоты слота команды
+                        endY = (slotRect.top + slotRect.bottom) / 2 - containerRect.top;
+                    }
+                }
+
+                // Вычисляем точку изгиба
+                let midX = startX + (endX - startX) / 2;
+                
+                // Для Гранд-финала задаем фиксированную точку изгиба по X,
+                // чтобы линии от Верхней и Нижней сетки поворачивали на одной и той же вертикали
+                if (isGf) {
+                    midX = endX - 60; // Ровно посередине 120px отступа перед колонкой Гранд-финала
+                }
+
+                // Строим путь (округление для резкости линий)
+                const path = `M ${Math.round(startX)} ${Math.round(startY)} ` +
+                             `L ${Math.round(midX)} ${Math.round(startY)} ` +
+                             `L ${Math.round(midX)} ${Math.round(endY)} ` +
+                             `L ${Math.round(endX)} ${Math.round(endY)}`;
+                             
+                svgContent += `<path class="bracket-line" d="${path}" />`;
+            }
+
+            // Верхняя сетка
+            drawConnection('ub-r1-m1', 'ub-r2-m1');
+            drawConnection('ub-r1-m2', 'ub-r2-m1');
+            drawConnection('ub-r1-m3', 'ub-r2-m2');
+            drawConnection('ub-r1-m4', 'ub-r2-m2');
+            drawConnection('ub-r2-m1', 'ub-r3-m1');
+            drawConnection('ub-r2-m2', 'ub-r3-m1');
+
+            // Нижняя сетка
+            drawConnection('lb-r1-m1', 'lb-r2-m1');
+            drawConnection('lb-r1-m2', 'lb-r2-m2');
+            drawConnection('lb-r2-m1', 'lb-r3-m1');
+            drawConnection('lb-r2-m2', 'lb-r3-m1');
+            drawConnection('lb-r3-m1', 'lb-r4-m1');
+
+            // Гранд-финал (линии идут в конкретные слоты)
+            drawConnection('ub-r3-m1', 'grand-final', true, 0); // 0 = верхняя команда
+            drawConnection('lb-r4-m1', 'grand-final', true, 1); // 1 = нижняя команда
+
+            svg.innerHTML = svgContent;
+        }
+    </script>
+</body>
+</html>
