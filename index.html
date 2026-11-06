@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="ru"><head><meta charset="utf-8"><title>Value Calculator</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+:root{--bg:#f6f5f1;--card:#fff;--tx:#1d1d1b;--mu:#6b6a64;--bd:#dcdad2;--ac:#c2570c;--ok:#2e7d32;--bad:#b3261e;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#171716;--card:#232321;--tx:#eeede8;--mu:#a09f98;--bd:#3a3a36;--ac:#f08a3c;--ok:#6fcf76;--bad:#ff8a80}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif;padding:16px}
+h1{font-size:20px;margin:0 0 12px}.wrap{max-width:980px;margin:auto}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(max-width:700px){.grid{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:12px}
+.card h2{font-size:15px;margin:0 0 8px}.sr{position:relative}
+input,select{font:inherit;color:var(--tx);background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:6px 8px}
+.sr input{width:100%}.dd{position:absolute;left:0;right:0;top:100%;z-index:5;background:var(--card);border:1px solid var(--bd);border-radius:8px;max-height:260px;overflow:auto;display:none}
+.dd div{padding:7px 10px;cursor:pointer;display:flex;justify-content:space-between;gap:8px}.dd div:hover{background:var(--bg)}
+.mu{color:var(--mu);font-size:12px}.row{border-top:1px solid var(--bd);padding:8px 0}.row:first-child{border-top:0}
+.top{display:flex;justify-content:space-between;gap:8px}.ctl{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;align-items:center}
+.ctl select{padding:3px 4px;font-size:13px}.q{width:56px}.x{border:0;background:none;color:var(--bad);cursor:pointer;font-size:18px}
+.tot{font-size:22px;font-weight:700;margin-top:8px;color:var(--ac)}
+.res{margin-top:12px;text-align:center;font-size:18px;font-weight:700}.ok{color:var(--ok)}.bad{color:var(--bad)}
+</style></head><body><div class="wrap">
+<div class="top"><h1>🧮 Value Calculator</h1><select id="lg"><option value="en">English</option><option value="ru">Русский</option></select></div>
+<div class="grid">
+<div class="card"><h2 id="ha"></h2><div class="sr"><input id="sa" autocomplete="off"><div class="dd" id="da"></div></div><div id="la"></div><div class="tot" id="ta">0</div></div>
+<div class="card"><h2 id="hb"></h2><div class="sr"><input id="sb" autocomplete="off"><div class="dd" id="db"></div></div><div id="lb"></div><div class="tot" id="tb">0</div></div>
+</div>
+<div class="card res" id="res"></div>
+
+</div>
+<script>
+const D=[
+["SSS",1,`Jio (Over Heaven) / Dio (SHINY);-1;5;O`],
+["SS",1,`Time Saviour / Gohan (SHINY);-1;6
+Jio (Over Heaven) / Dio;38500;7.5
+Time Saviour / Gohan;30000;6
+Blue Flare / Rin (SHINY);26750;5.5`],
+["S+",1,`Dracula / Alucard (SHINY);24000;8;O
+Blue Flare / Rin;21500;6
+Shade Hunter / Zabuza (SHINY);18250;5.5
+Artificial AAA / A21 (SHINY);17000;5.5
+Illusionist / Aizen (SHINY);16000;8.5;O`],
+["S",1,`Shadowgirl / Homura (SHINY);10750;7.5
+Artificial AAA / A21;9750;6
+Pirate King / Gol D. Roger (SHINY);6800;5.5
+Ice Lily / Emilia (SHINY);6250;6
+Skeleton Knight / Skull Knight (SHINY);5650;7
+Demonshade / Hiei (SHINY);4250;5
+Blood / Power (SHINY);3750;6.5
+Viking / Thorfinn (SHINY);3500;6.5;U
+Toby / Tobi (SHINY);3400;4
+Lord Alien King / Boros (SHINY);3250;6`],
+["S-",1,`White Snake / Gin (SHINY);2650;6
+Golden King / Gilgamesh (SHINY);2600;6.5
+Joker / Shidou (SHINY);2550;3
+Saicky / Saiki K (SHINY);2500;4
+Riony / Rias (SHINY);2450;6.5
+Jelly / Jellal (SHINY);2200;5
+Blood Queen / Unohana (SHINY);2100;6
+Phantom King / Lelouch (SHINY);2000;5
+Dracula / Alucard;1800;8
+Illusionist / Aizen;1700;9;H
+Millie / Mamy (SHINY);1625;5.5
+Kumo / Kuma (SHINY);1550;3
+Lily / Lucy (SHINY);1550;5.5`],
+["A+",1,`Green Alien / Piccolo (SHINY);1450;5.5
+Vengeful Swordman / Chihiro (SHINY);1400;6.5;U
+Viking / Thorfinn;1325;6;U
+Enlightened / Buddha (SHINY);1225;5.5
+Joker / Shidou;1225;4
+Demonshade / Hiei;1200;4
+Tango / Tengen;1125;3
+Saiky / Saiki K;1125;3.5
+Elize / Erza (Lightning);1075;5.5
+Trickster / Kisuke (Bankai);1000;5.5
+Kumo / Kuma;975;3.5
+Stringy / Doflamingo (SHINY);965;4
+Infinity Mage / Merlin (SHINY);950;4.5
+Shizo / Shisui (SHINY);950;5.5
+Snake Princess / Boa (SHINY);925;5
+Shadowgirl / Homura;900;8.5
+Pirate King / Gol D. Roger;900;5
+Dark Mage / Judar (SHINY);875;6.5
+Silver King / Rayleigh (SHINY);875;5.5
+Umbra / Cid (SHINY);850;5.5
+Katana / Kenshin (SHINY);800;4.5`],
+["A",1,`Fiery Commander / Yamamoto (SHINY);780;4
+Kimomaro / Kimimaro (SHINY);775;5
+Fan Ninja / Temari (SHINY);775;3.5
+Sea God / Poseidon (SHINY);750;5
+Inhuman / Dazai (SHINY);700;5
+Bomb Angel / Bambietta (SHINY);675;6.5
+Shade Hunter / Zabuza;670;5
+Paragon / Angel (SHINY);665;5
+Agony / Pain (SHINY);650;4
+Jozo / Jozu (SHINY);650;2.5
+Puppet Girl / Yoshino (SHINY);625;7
+Dragon Knight / Issei (SHINY);625;4.5
+Mangaka / Rohan (SHINY);620;4
+Magic Girl / Madoka (SHINY);600;6.5
+Boxo / Boxo (SHINY);600;2
+Gazu / Geto (SHINY);600;5.5
+Chuuni / Chunibyo (SHINY);575;6.5;H
+Switchblade / Nagumo (SHINY);575;4.5;U
+Ice Queen / Esdeath (SHINY);575;5
+Akemy / Akeno (SHINY);550;5.5
+Ghost Lady / Perona (SHINY);525;5
+Saka / Daki (SHINY);525;3.5
+Doll / Gowther (SHINY);500;5
+Toad Sensei / Jiraiya (SHINY);500;5
+Hammerhead / Harribel (SHINY);490;3.5
+Dog Demon / Inuyasha (SHINY);480;5
+Crusader / Heathcliff (SHINY);475;5
+Troy Flame / Roy Mustang (SHINY);475;2.5;U
+Curse / Aki (SHINY);470;5
+Wukong / Jin Mori (SHINY);470;5
+Tattermo / Tatsumi (SHINY);460;4.5
+Fridge / Cooler (SHINY);450;3.5`],
+["A-",1,`Violentine / Mitsukai (SHINY);435;5.5;U
+Blade Beast / Denji (Mythic) (SHINY);430;4.5
+Gravity Mage / Chuya (SHINY);425;4.5
+Katana / Kenshin;415;4
+Kimomaro / Kimimaro;400;2.5
+Fan Ninja / Temari;400;2.5
+Messi / Isagi (SHINY);385;4
+Boxer / Ippo (SHINY);380;3.5
+Scarlet Slayer / Kyōka Izumi (SHINY);380;4
+Jozo / Jozu;380;2
+Saki / Sayaka (SHINY);375;5
+Flash Ninja / Minato (SHINY);375;4
+Catgirl / Koneko (SHINY);375;5
+Skeleton / Brook (SHINY);370;5
+Death Ninja / Hidan (SHINY);370;3
+Robot Sorcerer / Mechamaru (SHINY);360;3
+Weather / Weather Report (SHINY);360;5
+Chance / Kite (SHINY);350;5
+Legendary Assassin / Sakamoto (SHINY);350;4.5;U
+Turtle Master / Roshi (SHINY);350;2.5
+Erza / Erza (Valkyrie) (SHINY);345;5.5
+Kyko / Kyoko (SHINY);345;4.5
+Somber / Osaragi (SHINY);340;4.5;U
+Vengeful Swordman / Chihiro;330;6
+Tiger / Asushi (SHINY);330;3
+Black Dog / Akutagawa (SHINY);325;3
+Erza / Erza (True Heart) (SHINY);320;5.5
+Stitches / Buggy (SHINY);320;1.5
+Ice Lily / Emilia;315;5.5
+Golden King / Gilgamesh;310;5.5
+Kansai / Osaka (SHINY);300;4.5;U`],
+["B+",1,`Virtual Samurai / Klein (SHINY);280;3
+Ratio / Kento Nanami (SHINY);275;5
+Sharkfin / Kisame (SHINY);275;3
+Fiend Girl / Hinamy (SHINY);275;3
+Fire First / Ace (SHINY);270;5
+Idol / Ai Hoshino (SHINY);270;5.5
+Killstreak / Gaku (SHINY);265;4;U
+Elf Mage / Frieren (SHINY);265;3
+Enlightened / Buddha;260;5.5
+Toshin / Toshiro (SHINY);260;4
+Skeleton Knight / Skull Knight;260;5
+Flamefeather / Avdol (SHINY);250;3
+Gas / Gas (SHINY);250;3
+Kobeno / Kobeni (SHINY);245;5
+Hime / Himeno (SHINY);245;4.5
+Boxo / Boxo;235;1
+Dark Mage / Judar;225;5.5
+Siren / Monet (SHINY);225;2.5
+Blood / Power;220;5
+Chuuni / Chunibyo;200;6;H`],
+["B",1,`Lulu / Lelouch;190;4
+Cream / Vanilla Ice (SHINY);190;2.5
+Lucky / Luck (SHINY);185;4
+Morbid / Moria (SHINY);185;2.5
+Dog Demon / Inuyasha;175;3.5
+Wukong / Jin Mori;175;3.5
+Umbra / Cid;170;4.5
+Switchblade / Nagumo;165;4
+Tattermo / Tatsumi;160;3
+Bladebeast / Denji (Secret) (SHINY);155;4
+Mira / Mirko (SHINY);150;3.5
+Fiery Commander / Yamamoto (Hellfire);150;3
+Lord Alien King / Boron;150;3
+Boxer / Ippo;150;3
+Stringy / Doflamingo;145;3
+Erza / Erza (Lightning);135;3
+Messi / Isagi;135;3
+Carrot (SHINY);135;3.5
+Ichi (Full Hollow) / Ichigo (Full Hollow) (SHINY);125;4
+Trickster / Kisuke;120;3.5
+Mirror Ninja / Haku (SHINY);115;4
+Sea God / Poseidon;115;3
+Weather Girl / Nami (SHINY);110;4
+Jellal / Jelly;110;3
+Veko (SHINY);110;5
+Infinity Mage / Merlin;105;3
+Agony / Pain;100;3
+Toad Sensei / Jiraiya;100;3
+Renzi / Renji (SHINY);100;4`],
+["B-",1,`Inhuman / Dazai;90;3
+Idol / Ai Hoshino;85;5.5
+Mangaka / Rohan;80;3
+Saka / Daki;80;3
+Violentine / Mitsukai;80;4.5
+Gazu / Geto (Maximum);75;4
+Ice Queen / Esdeath;70;3.5
+Legendary Assassin / Sakamoto;70;3
+Lyla / Lucy (All Keys);70;4
+Somber / Osaragi;65;3
+Weather Girl / Nami;65;4
+Crusader / Heathcliff;65;2.5
+Green Alien / Piccolo;65;3
+Robot Sorcerer / Mechamaru;65;3
+Millie / Mami;60;2.5
+Shizo / Shisui;60;2.5
+Dragon Knight / Issei;60;2.5
+Paragon / Angel;60;2.5
+Stitches / Buggy;60;1
+Riony / Rias;55;3
+Skeleton / Brook;55;3`],
+["C+",1,`Magic Girl / Madoka;50;3
+Gravity Mage / Chuyo;50;2.5
+Akemy / Akeno;50;3
+Shingo / Shinji (SHINY);50;2.5
+Mecha Freezo / Mecha Frieza (SHINY);50;2.5
+Blade Beast / Denji (Mythic);50;2
+Curse / Aki;50;2
+Catgirl / Koneko;50;2.5
+Death Ninja / Hidan;45;2.5
+Bombietta / Bambietta;45;3
+Troy Flame / Roy Mustang;45;2.5
+Saki / Sayaka;45;2.5
+Hammerhead / Harribel;45;2.5
+Fiend Girl / Hinamy;40;2.5
+Scarlet Slayer / Kyōka Izumi;40;2.5
+Tiger / Asushi;40;2
+Siren / Monet;40;2.5
+Ghost Lady / Perona;40;2
+Virtual Samurai / Klein;40;2
+Erza / Erza (Valkyrie);35;2
+Kansai / Osaka;35;2.5
+Gas / Gas;35;2
+Killstreak / Gaku;35;2
+Flamefeather / Avdol;35;2
+Snake Princess / Boa;35;2
+Elf Mage / Frieren;30;2.5
+Flash Ninja / Minato;30;1.5
+Silver King / Rayleigh;30;1.5
+Tango / Tengen;30;1.5
+Black Dog / Akutagawa;30;1.5
+Blood Queen / Unohana;30;2`],
+["C",1,`Sharkfin / Kisame;25;1
+Kyko / Kyoko;25;1.5
+Hime / Himeno;25;2
+Kobeno / Kobeni;25;2
+Doll / Gowther;25;1.5
+Fridge / Cooler;25;1.5
+Tobi / Toby;20;1
+Erza / Erza (True Heart);20;1.5
+Turtle / Roshi;20;1.5
+Cream / Vanilla Ice;20;1.5
+Lily / Lucy (Missing Keys);15;1
+Toshin / Toshiro;15;1
+Ratio / Kento Nanami;15;2
+Heavy Weather / Weather Report;15;2`],
+["C-",1,`Kit / Kite;10;2
+Lucky / Luck;10;1.5
+Veko;10;2
+White Snake / Gin;10;1
+Morbid / Moria;10;1
+Fire First / Ace;10;1
+Ichi (Full Hollow) / Ichigo (Full Hollow);5;1
+Renzi / Renji;5;1
+Luffo (Marine’s Ford) / Luffy (Marineford);5;1
+Shingo / Shinji;5;1
+Mecha Freezo / Mecha Frieza;5;1
+Puppet Girl / Yoshino;5;1.5
+Carrot;5;1
+Mira / Mirko;5;1`],
+["Relic",0,`Nail (High %);410;5.5
+Nail (Low %);280;5
+Black Blade Autumn Water;65;2
+Hellfire Blade;45;1`],
+["Rainbow skin",0,`Bulmy (Teen) / Bulma RAINBOW;16000;2.5
+Orwin (Headless) / Erwin RAINBOW;9600;3
+Pito (Halloween) / Pito RAINBOW;5300;2`],
+["Skin",0,`Bulmy (Teen) / Bulma (Any Colour);740;6
+Orwin (Delinquent) / Erwin (Any Colour);650;5.5
+Orwin (Headless) / Erwin (Any Colour);550;5.5
+Goju (Vampire) / Gojo;110;3
+Pito (Halloween) / Pito (Any Colour);55;2
+Guts (Slayer) / Guts;10;2
+Menace (Jetstream) / Stain;5;2
+Asto (Angel) / Asta;1;1
+Tangen / Tango (Festival);1;1
+Metal Knight / Metal Knight (Coco);1;1`],
+["Gamepass",0,`Grand Return Bundle;3500;7.5
+Summer Bundle 3;1875;6.5
+Summer Bundle 2;1400;6
+Summer Bundle 1;1000;6
+Shiny Hunter;280;5
+Battle Pass;280;5
+Assassin’s Bundle;280;4
+Starter Bundle;260;4
+Skip 10 levels;240;4
+Display All Units;130;3
+VIP;50;2
+Display 3 Units;25;2
+Unit Storage;20;2`]];
+const ALL=[];D.forEach(([c,u,s])=>s.split("\n").forEach(l=>{const[n,v,d,t]=l.split(";");ALL.push({n,v:+v,d:+d,t:t||"",c,u})}));
+const ST={DMG:[0,20,110,475],SPA:[0,20,90,425],RNG:[0,20,60,375]},SL=["—","S+…S-","SS","SSS"];
+const side={a:[],b:[]};let L="en";
+const T={en:{ha:"You give",hb:"You get",ph:"Search: unit, skin, relic…",U:"unstable",H:"hyped",O:"overpriced",dem:"demand",neg:"price negotiable",qty:"qty",none:"Not found",empty:"Add items",eq:"Roughly even trade (difference ",plus:"You gain: +",minus:"You lose: −"},ru:{ha:"Вы отдаёте",hb:"Вы получаете",ph:"Поиск: юнит, скин, реликвия…",U:"нестабилен",H:"хайп",O:"переоценён",dem:"спрос",neg:"цена договорная",qty:"кол-во",none:"Не найдено",empty:"Добавьте предметы",eq:"Примерно равная сделка (разница ",plus:"Вы в плюсе: +",minus:"Вы в минусе: −"}};
+const CAT={ru:{Relic:"Реликвия","Rainbow skin":"Rainbow скин",Skin:"Скин",Gamepass:"Геймпасс"}};
+const tr=k=>T[L][k],cat=c=>(L==="ru"&&CAT.ru[c])||c;
+const $=i=>document.getElementById(i),esc=s=>s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const fmt=n=>Math.round(n).toLocaleString(L==="ru"?"ru-RU":"en-US");
+const price=r=>{const i=ALL[r.i];if(i.v<0)return 0;let p=i.v;if(i.u)for(const k in ST)p+=ST[k][r.s[k]];return p*r.q};
+function render(){let tot={};for(const k of["a","b"]){
+$("l"+k).innerHTML=side[k].map((r,j)=>{const i=ALL[r.i];
+const st=i.u?Object.keys(ST).map(s=>`<label class="mu">${s} <select data-k="${k}" data-j="${j}" data-s="${s}">${SL.map((o,x)=>`<option value="${x}"${r.s[s]==x?" selected":""}>${o}</option>`).join("")}</select></label>`).join(""):"";
+return `<div class="row"><div class="top"><div>${esc(i.n)}<div class="mu">${cat(i.c)}${i.t?" · "+tr(i.t):""} · ${tr("dem")} ${i.d}${i.v<0?" · "+tr("neg"):""}</div></div><div><b>${fmt(price(r))}</b> <button class="x" data-k="${k}" data-j="${j}" data-rm="1">×</button></div></div><div class="ctl">${st}<label class="mu">${tr("qty")} <input class="q" type="number" min="1" value="${r.q}" data-k="${k}" data-j="${j}" data-q="1"></label></div></div>`}).join("");
+tot[k]=side[k].reduce((s,r)=>s+price(r),0);$("t"+k).textContent=fmt(tot[k])}
+const d=tot.b-tot.a,m=Math.max(tot.a,tot.b),r=$("res");
+if(!m){r.textContent=tr("empty");r.className="card res";return}
+const p=Math.abs(d)/m*100;
+if(p<=5){r.textContent=tr("eq")+fmt(Math.abs(d))+")";r.className="card res"}
+else if(d>0){r.textContent=`${tr("plus")}${fmt(d)} (${p.toFixed(0)}%)`;r.className="card res ok"}
+else{r.textContent=`${tr("minus")}${fmt(-d)} (${p.toFixed(0)}%)`;r.className="card res bad"}}
+for(const k of["a","b"]){const inp=$("s"+k),dd=$("d"+k);
+inp.addEventListener("input",()=>{const q=inp.value.trim().toLowerCase();if(!q){dd.style.display="none";return}
+const m=[];ALL.forEach((x,i)=>{if(m.length<12&&x.n.toLowerCase().includes(q))m.push(i)});
+dd.innerHTML=m.map(i=>`<div data-i="${i}"><span>${esc(ALL[i].n)}</span><span class="mu">${cat(ALL[i].c)} · ${ALL[i].v<0?"?":fmt(ALL[i].v)}</span></div>`).join("")||'<div class="mu">${tr("none")}</div>';dd.style.display="block"});
+dd.addEventListener("mousedown",e=>{const el=e.target.closest("[data-i]");if(!el)return;e.preventDefault();
+side[k].push({i:+el.dataset.i,q:1,s:{DMG:0,SPA:0,RNG:0}});inp.value="";dd.style.display="none";render()});
+inp.addEventListener("blur",()=>dd.style.display="none");
+$("l"+k).addEventListener("click",e=>{if(e.target.dataset.rm){side[k].splice(+e.target.dataset.j,1);render()}});
+$("l"+k).addEventListener("change",e=>{const t=e.target,r=side[k][+t.dataset.j];if(!r)return;
+if(t.dataset.q)r.q=Math.max(1,parseInt(t.value)||1);else if(t.dataset.s)r.s[t.dataset.s]=+t.value;render()})}
+function setLang(l){L=l;document.documentElement.lang=l;$("ha").textContent=tr("ha");$("hb").textContent=tr("hb");$("sa").placeholder=$("sb").placeholder=tr("ph");render()}
+$("lg").addEventListener("change",e=>setLang(e.target.value));
+setLang("en");
+</script></body></html>
