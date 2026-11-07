@@ -17,11 +17,13 @@ button:active{transform:scale(0.96);opacity:.8}
 .top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
 h1{font:700 17px/1.2 Unbounded,Onest,system-ui,sans-serif;margin:6px 0 0;letter-spacing:-.01em}
 h2{font:600 15px/1.2 Onest,system-ui,sans-serif;margin:2px 0 10px}
-select,input{font:inherit;font-size:16px;color:var(--tx);background:var(--sf2);border:0;border-radius:10px;padding:8px 10px;outline:none;transition:all .25s ease}
+select,input{font:inherit;font-size:16px;color:var(--tx);background:var(--sf2);border:0;border-radius:10px;padding:8px 10px;outline:none;transition:all .25s ease;appearance:none;-moz-appearance:none;-webkit-appearance:none}
 input:focus{box-shadow:0 0 0 2px var(--gold);transform:translateY(-1px)}
-select{font-size:14px;padding:6px 8px}
+select{font-size:14px;padding:6px 8px;background-image:url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");background-repeat:no-repeat;background-position:right 8px center;background-size:16px;padding-right:32px}
 input::placeholder{color:var(--mu)}
-.fb,.tabs{display:flex;gap:4px;background:var(--sf);border-radius:12px;padding:4px;overflow-x:auto;margin:12px 0;transition:all .3s ease}
+input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+input[type=number]{-moz-appearance:textfield}
+.fb,.tabs{display:flex;gap:4px;background:var(--sf);border-radius:12px;padding:4px;overflow-x:auto;margin:12px 0;transition:all .3s ease;scrollbar-width:none}.fb::-webkit-scrollbar,.tabs::-webkit-scrollbar{display:none}
 .tabs.main-tabs{background:transparent;padding:0;margin-bottom:14px}
 .tabs.main-tabs .chipb{background:var(--sf);font-weight:600;font-size:14px;padding:10px 16px;border-radius:12px}
 .tabs.main-tabs .chipb.on{background:var(--gb);color:#171b38;box-shadow:0 4px 12px rgba(245, 184, 61, 0.25)}
@@ -49,17 +51,18 @@ input::placeholder{color:var(--mu)}
 .tr{font-size:12px;font-weight:500;display:inline-flex;align-items:center;gap:4px}.tr:before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
 .tS{color:var(--mu)}.tH{color:var(--gold)}.tU{color:var(--bad)}.tO{color:var(--r5)}
 .ctl{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;align-items:center}
-.stp{display:inline-flex;align-items:center;background:var(--sf2);border-radius:10px;overflow:hidden;transition:background .2s ease}
+.stp{display:inline-flex;align-items:center;background:var(--sf2);border-radius:10px;overflow:hidden;transition:background .2s ease;height:36px}
 .stp:hover{background:color-mix(in srgb,var(--sf2) 80%,var(--tx))}
-.stp button{border:0;background:none;color:var(--tx);width:38px;height:36px;font-size:18px}
+.stp button{border:0;background:none;color:var(--tx);width:38px;height:100%;font-size:18px;display:flex;align-items:center;justify-content:center}
 .stp button:hover{background:color-mix(in srgb,var(--tx) 10%,transparent)}
-.stp input{width:46px;background:none;border-radius:0;text-align:center;padding:6px 0;outline:none}
+.stp input{width:46px;height:100%;background:none;border-radius:0;text-align:center;padding:0;outline:none;font-size:15px;font-weight:500}
+.stp input:focus{box-shadow:none;transform:none;background:color-mix(in srgb,var(--tx) 5%,transparent)}
 .x{border:0;background:none;color:var(--mu);font-size:24px;margin-left:auto;padding:0 8px;line-height:1;transition:color .2s,transform .2s}.x:hover{color:var(--bad);transform:scale(1.2) rotate(90deg)}
 .btn{background:var(--gb);color:#171b38;border:0;border-radius:11px;padding:10px 16px;font-weight:600;font-size:14px;box-shadow:0 2px 8px rgba(0,0,0,.15)}
 .btn:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(245,184,61,.3)}
 .btn.g{background:var(--sf2);color:var(--tx);font-weight:500;padding:8px 12px;font-size:13px;box-shadow:none}
 .btn.g:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.15);background:var(--sf)}
-.sg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;animation:fadeSlideIn .2s ease-out backwards}.sg label{display:flex;flex-direction:column;gap:2px}.sg select{width:100%;padding:8px 6px}
+.sg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;animation:fadeSlideIn .2s ease-out backwards}.sg label{display:flex;flex-direction:column;gap:2px}.sg select{width:100%;padding:8px 6px;background-position:right 4px center;background-size:14px;padding-right:24px}
 .empty{color:var(--mu);padding:18px 4px;text-align:center;animation:fadeIn .4s ease}
 .bar{position:sticky;bottom:0;z-index:6;margin-top:14px;padding:12px 14px calc(12px + env(safe-area-inset-bottom,0px));background:var(--sf);border-radius:18px;box-shadow:0 -8px 30px rgba(0,0,0,.4);transition:transform .4s cubic-bezier(.4,0,.2,1)}
 .bal{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:14px}
@@ -152,7 +155,7 @@ en:{nav_list:"Value List",nav_calc:"Calculator",list_ph:"Search units, skins, re
 ru:{nav_list:"Валуе лист",nav_calc:"Калькулятор",list_ph:"Поиск юнитов, скинов...",ha:"Вы отдаёте",hb:"Вы получаете",ph:"Поиск: юнит, скин, реликвия…",hint:"Найдите предмет выше или выберите из списка",S:"стабилен",U:"нестабилен",H:"хайп",O:"переоценён",dem:"спрос",neg:"цена договорная",none:"Не найдено",empty:"Добавьте предметы",eq:"Примерно равная сделка (разница ",plus:"Вы в плюсе: +",minus:"Вы в минусе: −",src:"Данные взяты с официального валуе листа:",lnk:"открыть таблицу",save:"Сохранить трейд",saved:"Сохранено ✓",hh:"История трейдов",clr:"Очистить",noh:"Сохранённых трейдов пока нет",load:"Загрузить",gave:"Отдал",got:"Получил",f_all:"Все",f_unit:"Юниты",f_skin:"Скины",f_relic:"Реликвии",f_pass:"Геймпассы",stats:"Статы",swap:"Поменять",copy:"Копировать",copied:"Скопировано ✓",reset:"Сбросить"},
 uk:{nav_list:"Валує лист",nav_calc:"Калькулятор",list_ph:"Пошук юнітів, скінів...",ha:"Ви віддаєте",hb:"Ви отримуєте",ph:"Пошук: юніт, скін, реліквія…",hint:"Знайдіть предмет вище або оберіть зі списку",S:"стабільний",U:"нестабільний",H:"хайп",O:"переоцінений",dem:"попит",neg:"ціна договірна",none:"Не знайдено",empty:"Додайте предмети",eq:"Приблизно рівна угода (різниця ",plus:"Ви в плюсі: +",minus:"Ви в мінусі: −",src:"Дані взято з офіційного валуе листа:",lnk:"відкрити таблицю",save:"Зберегти трейд",saved:"Збережено ✓",hh:"Історія трейдів",clr:"Очистити",noh:"Збережених трейдів поки немає",load:"Завантажити",gave:"Віддав",got:"Отримав",f_all:"Усі",f_unit:"Юніти",f_skin:"Скіни",f_relic:"Реліквії",f_pass:"Геймпаси",stats:"Стати",swap:"Поміняти",copy:"Копіювати",copied:"Скопійовано ✓",reset:"Скинути"}};
 const CAT={uk:{Relic:"Реліквія","Rainbow skin":"Rainbow скін",Skin:"Скін",Gamepass:"Геймпас"},ru:{Relic:"Реликвия","Rainbow skin":"Rainbow скин",Skin:"Скин",Gamepass:"Геймпасс"}},LOC={en:"en-US",ru:"ru-RU",uk:"uk-UA"};
-let L="en",F="all",TAB="a";const side={a:[],b:[]};
+let L="en",F="all",TAB="a",VIEW="list";const side={a:[],b:[]};
 const $=i=>document.getElementById(i),esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const tr=k=>T[L][k],cat=c=>(CAT[L]&&CAT[L][c])||c,fmt=n=>Math.round(n).toLocaleString(LOC[L]);
 const sx=r=>ALL[r.i].u?Object.keys(ST).reduce((t,k)=>t+ST[k][r.s[k]],0):0;
@@ -164,6 +167,7 @@ const pk=a=>a.map(r=>({n:ALL[r.i].n,c:ALL[r.i].c,q:r.q,s:{...r.s}}));
 const un=a=>(a||[]).map(x=>({i:ALL.findIndex(y=>y.n===x.n&&y.c===x.c),q:x.q||1,s:{DMG:0,SPA:0,RNG:0,...x.s},o:0})).filter(r=>r.i>=0);
 let H=[];try{H=JSON.parse(lsGet("aa_hist","[]"))}catch(e){}
 try{const cur=JSON.parse(lsGet("aa_cur","{}"));side.a=un(cur.a);side.b=un(cur.b)}catch(e){}
+try{VIEW=lsGet("aa_view","list");TAB=lsGet("aa_tab","a");}catch(e){}
 
 const match=it=>F==="all"||(F==="unit"&&it.u)||(F==="skin"&&/skin/i.test(it.c))||(F==="relic"&&it.c==="Relic")||(F==="pass"&&it.c==="Gamepass");
 const TC=i=>!i.u?"var(--rx)":i.c==="SSS"?"var(--r5)":i.c==="SS"?"var(--r4)":/^S/.test(i.c)?"var(--r3)":/^A/.test(i.c)?"var(--r2)":/^B/.test(i.c)?"var(--r1)":"var(--r0)";
@@ -175,7 +179,14 @@ function renderValueList(){
     const q=$("list-q").value.trim().toLowerCase();
     let html="";
     let delayCounter=0;
-    D.forEach(([c,u,s])=>{
+    const tierOrder=["SSS","SS","S+","S","S-","A+","A","A-","B+","B","B-","C+","C","C-","Relic","Rainbow skin","Skin","Gamepass"];
+    
+    tierOrder.forEach(c=>{
+        const tierData = D.find(d => d[0] === c);
+        if(!tierData) return;
+        const u = tierData[1];
+        const s = tierData[2];
+        
         const items = s.split("\n").map(l=>{
             const [n,v,d,t,inf]=l.split(";");
             return {n,v:+v,d:+d,t:t||"",inf:inf||"",c,u};
@@ -218,23 +229,29 @@ const fbar=()=>{$("fb").innerHTML=FS.map(([f,k])=>`<button class="chipb${F===f?"
 const txt=()=>{const f=k=>side[k].map(r=>ALL[r.i].n+(sx(r)?` [+${sx(r)}]`:"")+(r.q>1?" ×"+r.q:"")).join(", ")||"—";return `${tr("gave")}: ${f("a")} (${fmt(tot("a"))})\n${tr("got")}: ${f("b")} (${fmt(tot("b"))})\n${$("res").textContent}`};
 const copy=async s=>{try{await navigator.clipboard.writeText(s);return 1}catch(e){try{const x=document.createElement("textarea");x.value=s;document.body.appendChild(x);x.select();const ok=document.execCommand("copy");x.remove();return ok}catch(e2){return 0}}};
 const flash=(el,m)=>{const o=el.innerHTML;el.textContent=m;setTimeout(()=>{el.innerHTML=o},1400)};
+
+function updateView(v) {
+    VIEW = v;
+    lsSet("aa_view", v);
+    $("nav-list").classList.toggle("on", v === "list");
+    $("nav-calc").classList.toggle("on", v === "calc");
+    $("view-list").style.display = v === "list" ? "block" : "none";
+    $("view-calc").style.display = v === "calc" ? "block" : "none";
+}
+
 document.addEventListener("click",e=>{const t=e.target.closest("[data-a]");if(!t)return;const a=t.dataset.a;
 if(a==="main"){
-    const v=t.dataset.v;
-    $("nav-list").classList.toggle("on",v==="list");
-    $("nav-calc").classList.toggle("on",v==="calc");
-    $("view-list").style.display=v==="list"?"block":"none";
-    $("view-calc").style.display=v==="calc"?"block":"none";
+    updateView(t.dataset.v);
     return;
 }
-if(a==="tab"){TAB=t.dataset.t;render();return}
+if(a==="tab"){TAB=t.dataset.t;lsSet("aa_tab",TAB);render();return}
 if(a==="f"){F=t.dataset.f;fbar();renderValueList();return}
 if(a==="swap"){[side.a,side.b]=[side.b,side.a];render();return}
 if(a==="clr"){side.a=[];side.b=[];render();return}
 if(a==="save"){if(!side.a.length&&!side.b.length)return;H.unshift({t:Date.now(),a:pk(side.a),b:pk(side.b),ta:tot("a"),tb:tot("b")});H=H.slice(0,100);lsSet("aa_hist",JSON.stringify(H));hist();flash(t,tr("saved"));return}
 if(a==="copy"){copy(txt()).then(ok=>flash(t,ok?"✓":"✗"));return}
 if(a==="hclr"){H=[];lsSet("aa_hist","[]");hist();return}
-if(a==="dl"){H.splice(+t.dataset.j,1);lsSet("aa_hist",JSON.stringify(H));hist();return}
+if(a===dl){H.splice(+t.dataset.j,1);lsSet("aa_hist",JSON.stringify(H));hist();return}
 if(a==="ld"){const h=H[+t.dataset.j];side.a=un(h.a);side.b=un(h.b);render();window.scrollTo(0,0);return}
 const r=side[t.dataset.k]&&side[t.dataset.k][+t.dataset.j];if(!r)return;
 if(a==="m")r.q=Math.max(1,r.q-1);else if(a==="p")r.q++;else if(a==="t")r.o=!r.o;else if(a==="x")side[t.dataset.k].splice(+t.dataset.j,1);
@@ -245,7 +262,9 @@ const r=side[t.dataset.k]&&side[t.dataset.k][+t.dataset.j];if(!r)return;
 if(t.dataset.a==="q")r.q=Math.max(1,parseInt(t.value)||1);else if(t.dataset.s)r.s[t.dataset.s]=+t.value;
 render()});
 for(const k of["a","b"]){const inp=$("s"+k),dd=$("d"+k);
-const list=()=>{const q=inp.value.trim().toLowerCase();return ALL.map((x,i)=>i).filter(i=>match(ALL[i])&&(!q||ALL[i].n.toLowerCase().includes(q)))};
+const list=()=>{const q=inp.value.trim().toLowerCase();
+    return ALL.map((x,i)=>i).filter(i=>match(ALL[i])&&(!q||ALL[i].n.toLowerCase().includes(q)))
+};
 const show=()=>{dd.innerHTML=list().map(i=>`<div data-i="${i}" style="--tc:${TC(ALL[i])}">${tag(ALL[i])}<span class="dn">${esc(ALL[i].n)}<br><span class="mu" style="color:${dc(ALL[i].d)}">${tr("dem")} ${ALL[i].d}</span></span><b>${ALL[i].v<0?"?":fmt(ALL[i].v)}</b></div>`).join("")||`<div class="mu">${tr("none")}</div>`;dd.style.display="block"};
 const add=i=>{side[k].push({i,q:1,s:{DMG:0,SPA:0,RNG:0},o:0});inp.value="";dd.style.display="none";render()};
 inp.addEventListener("input",show);inp.addEventListener("focus",show);
@@ -262,5 +281,5 @@ const ib=(k,i)=>`<span class="ic"><svg viewBox="0 0 24 24">${IC[i]}</svg></span>
 $("src").innerHTML=tr("src")+' <a href="https://docs.google.com/spreadsheets/d/1KTVAqVw26TkwJF7GGJmKjkVEXCK5itqS1OZAIpqxuJ0/htmlview?gid=883691415" target="_blank" rel="noopener">'+tr("lnk")+'</a>';
 fbar();render();hist();renderValueList();}
 const dl=()=>{for(const x of(navigator.languages||[navigator.language])){const c=(x||"").slice(0,2).toLowerCase();if(T[c])return c}return"en"};
-{const l=lsGet("aa_lang",null);setLang(T[l]?l:dl())}
+{const l=lsGet("aa_lang",null);setLang(T[l]?l:dl());updateView(VIEW);}
 </script></body></html>
