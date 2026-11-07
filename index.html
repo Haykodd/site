@@ -245,7 +245,7 @@ const r=side[t.dataset.k]&&side[t.dataset.k][+t.dataset.j];if(!r)return;
 if(t.dataset.a==="q")r.q=Math.max(1,parseInt(t.value)||1);else if(t.dataset.s)r.s[t.dataset.s]=+t.value;
 render()});
 for(const k of["a","b"]){const inp=$("s"+k),dd=$("d"+k);
-const list=()=>{const q=inp.value.trim().toLowerCase();return ALL.map((x,i)=>i).filter(i=>match(ALL[i])&&(!q||ALL[i].n.toLowerCase().includes(q))).slice(0,30)};
+const list=()=>{const q=inp.value.trim().toLowerCase();return ALL.map((x,i)=>i).filter(i=>match(ALL[i])&&(!q||ALL[i].n.toLowerCase().includes(q)))};
 const show=()=>{dd.innerHTML=list().map(i=>`<div data-i="${i}" style="--tc:${TC(ALL[i])}">${tag(ALL[i])}<span class="dn">${esc(ALL[i].n)}<br><span class="mu" style="color:${dc(ALL[i].d)}">${tr("dem")} ${ALL[i].d}</span></span><b>${ALL[i].v<0?"?":fmt(ALL[i].v)}</b></div>`).join("")||`<div class="mu">${tr("none")}</div>`;dd.style.display="block"};
 const add=i=>{side[k].push({i,q:1,s:{DMG:0,SPA:0,RNG:0},o:0});inp.value="";dd.style.display="none";render()};
 inp.addEventListener("input",show);inp.addEventListener("focus",show);
