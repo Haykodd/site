@@ -44,8 +44,8 @@ input::placeholder{color:var(--mu)}
 .pr{flex:none;font:700 14px Unbounded,Onest,sans-serif;color:var(--gold);white-space:nowrap;padding-top:3px}
 .row>.top{display:flex;gap:10px;align-items:flex-start}
 .meta{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;margin:3px 0 2px;font-weight:400}
-.dm{width:34px;height:5px;border-radius:3px;background:var(--ln);overflow:hidden}.dm i{display:block;height:100%;background:var(--gold);transition:width .4s cubic-bezier(.4,0,.2,1)}
-.dx{font-size:12px;color:var(--mu)}
+.dm{width:34px;height:5px;border-radius:3px;background:var(--ln);overflow:hidden}.dm i{display:block;height:100%;transition:width .4s cubic-bezier(.4,0,.2,1),background-color .4s}
+.dx{font-size:12px;font-weight:600}
 .tr{font-size:12px;font-weight:500;display:inline-flex;align-items:center;gap:4px}.tr:before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
 .tS{color:var(--mu)}.tH{color:var(--gold)}.tU{color:var(--bad)}.tO{color:var(--r5)}
 .ctl{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;align-items:center}
@@ -168,7 +168,8 @@ try{const cur=JSON.parse(lsGet("aa_cur","{}"));side.a=un(cur.a);side.b=un(cur.b)
 const match=it=>F==="all"||(F==="unit"&&it.u)||(F==="skin"&&/skin/i.test(it.c))||(F==="relic"&&it.c==="Relic")||(F==="pass"&&it.c==="Gamepass");
 const TC=i=>!i.u?"var(--rx)":i.c==="SSS"?"var(--r5)":i.c==="SS"?"var(--r4)":/^S/.test(i.c)?"var(--r3)":/^A/.test(i.c)?"var(--r2)":/^B/.test(i.c)?"var(--r1)":"var(--r0)";
 const tag=i=>`<span class="tag" style="--tc:${TC(i)}">${esc(i.u?i.c:cat(i.c))}</span>`;
-const chips=i=>`<span class="dm" title="${tr("dem")} ${i.d}"><i style="width:${Math.min(100,i.d/9*100)}%"></i></span><span class="dx">${tr("dem")} ${i.d}</span><span class="tr t${i.t||"S"}">${tr(i.t||"S")}</span>${i.v<0?`<span class="tr tO">${tr("neg")}</span>`:""}`;
+const dc=d=>`hsl(${Math.min(120,Math.max(0,(d-1)/8*120))},85%,45%)`;
+const chips=i=>`<span class="dm" title="${tr("dem")} ${i.d}"><i style="width:${Math.min(100,i.d/9*100)}%;background-color:${dc(i.d)}"></i></span><span class="dx" style="color:${dc(i.d)}">${tr("dem")} ${i.d}</span><span class="tr t${i.t||"S"}">${tr(i.t||"S")}</span>${i.v<0?`<span class="tr tO">${tr("neg")}</span>`:""}`;
 
 function renderValueList(){
     const q=$("list-q").value.trim().toLowerCase();
@@ -245,7 +246,7 @@ if(t.dataset.a==="q")r.q=Math.max(1,parseInt(t.value)||1);else if(t.dataset.s)r.
 render()});
 for(const k of["a","b"]){const inp=$("s"+k),dd=$("d"+k);
 const list=()=>{const q=inp.value.trim().toLowerCase();return ALL.map((x,i)=>i).filter(i=>match(ALL[i])&&(!q||ALL[i].n.toLowerCase().includes(q))).slice(0,30)};
-const show=()=>{dd.innerHTML=list().map(i=>`<div data-i="${i}" style="--tc:${TC(ALL[i])}">${tag(ALL[i])}<span class="dn">${esc(ALL[i].n)}<br><span class="mu">${tr("dem")} ${ALL[i].d}</span></span><b>${ALL[i].v<0?"?":fmt(ALL[i].v)}</b></div>`).join("")||`<div class="mu">${tr("none")}</div>`;dd.style.display="block"};
+const show=()=>{dd.innerHTML=list().map(i=>`<div data-i="${i}" style="--tc:${TC(ALL[i])}">${tag(ALL[i])}<span class="dn">${esc(ALL[i].n)}<br><span class="mu" style="color:${dc(ALL[i].d)}">${tr("dem")} ${ALL[i].d}</span></span><b>${ALL[i].v<0?"?":fmt(ALL[i].v)}</b></div>`).join("")||`<div class="mu">${tr("none")}</div>`;dd.style.display="block"};
 const add=i=>{side[k].push({i,q:1,s:{DMG:0,SPA:0,RNG:0},o:0});inp.value="";dd.style.display="none";render()};
 inp.addEventListener("input",show);inp.addEventListener("focus",show);
 inp.addEventListener("keydown",e=>{if(e.key==="Enter"){const m=list();if(m.length)add(m[0])}});
