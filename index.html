@@ -1,340 +1,265 @@
 <!DOCTYPE html>
-<html lang="ru"><head><meta charset="utf-8"><title>Value Calculator</title>
+<html lang="en"><head><meta charset="utf-8"><title>AA Value Calculator</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&family=Unbounded:wght@500;700&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#f6f5f1;--card:#fff;--tx:#1d1d1b;--mu:#6b6a64;--bd:#dcdad2;--ac:#c2570c;--ok:#2e7d32;--bad:#b3261e;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#171716;--card:#232321;--tx:#eeede8;--mu:#a09f98;--bd:#3a3a36;--ac:#f08a3c;--ok:#6fcf76;--bad:#ff8a80}}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif;padding:16px}
-h1{font-size:20px;margin:0 0 12px}.wrap{max-width:980px;margin:auto}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(max-width:700px){.grid{grid-template-columns:1fr}}
-.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:12px}
-.card h2{font-size:15px;margin:0 0 8px}.sr{position:relative}
-input,select{font:inherit;color:var(--tx);background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:6px 8px}
-.sr input{width:100%}.dd{position:absolute;left:0;right:0;top:100%;z-index:5;background:var(--card);border:1px solid var(--bd);border-radius:8px;max-height:260px;overflow:auto;display:none}
-.dd div{padding:7px 10px;cursor:pointer;display:flex;justify-content:space-between;gap:8px}.dd div:hover{background:var(--bg)}
-.mu{color:var(--mu);font-size:12px}.row{border-top:1px solid var(--bd);padding:8px 0}.row:first-child{border-top:0}
-.top{display:flex;justify-content:space-between;gap:8px}.ctl{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;align-items:center}
-.ctl select{padding:3px 4px;font-size:13px}.q{width:56px}.x{border:0;background:none;color:var(--bad);cursor:pointer;font-size:18px}
-.tot{font-size:22px;font-weight:700;margin-top:8px;color:var(--ac)}
-.res{margin-top:12px;text-align:center;font-size:18px;font-weight:700}.ok{color:var(--ok)}.bad{color:var(--bad)}
+:root{color-scheme:light dark;--bg:#eef0f8;--sf:#fff;--sf2:#e7eaf6;--tx:#171b38;--mu:#5c6390;--ln:#d8dcef;--gold:#9a6200;--gb:#f5b83d;--give:#e0533a;--get:#14a37a;--ok:#12805c;--bad:#c23a22;
+--r0:#6f7899;--r1:#2f7fd6;--r2:#8f4fd6;--r3:#b87800;--r4:#d9482b;--r5:#d0307a;--rx:#0f8f8a;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#131521;--sf:#1e2136;--sf2:#2a2d46;--tx:#f1f3fb;--mu:#8c93b4;--ln:#383e6e;--gold:#f5b83d;--give:#ff7a5c;--get:#3fd6a4;--ok:#5fd8a6;--bad:#ff8a70;--r0:#8e97bc;--r1:#58aeff;--r2:#be80f5;--r3:#f5b83d;--r4:#ff8466;--r5:#ff5c9e;--rx:#4fd1c5}}
+:root[data-theme="dark"]{--bg:#131521;--sf:#1e2136;--sf2:#2a2d46;--tx:#f1f3fb;--mu:#8c93b4;--ln:#383e6e;--gold:#f5b83d;--give:#ff7a5c;--get:#3fd6a4;--ok:#5fd8a6;--bad:#ff8a70;--r0:#8e97bc;--r1:#58aeff;--r2:#be80f5;--r3:#f5b83d;--r4:#ff8466;--r5:#ff5c9e;--rx:#4fd1c5}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.45 Onest,system-ui,-apple-system,"Segoe UI",sans-serif;padding:14px}
+.wrap{max-width:960px;margin:auto;padding:0 env(safe-area-inset-left,0px) 0 env(safe-area-inset-right,0px)}
+a{color:var(--gold)}button{font:inherit;touch-action:manipulation;-webkit-tap-highlight-color:transparent;cursor:pointer;transition:all .25s cubic-bezier(.4,0,.2,1)}
+button:active{transform:scale(0.96);opacity:.8}
+:focus-visible{outline:2px solid var(--gb);outline-offset:2px}
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+h1{font:700 17px/1.2 Unbounded,Onest,system-ui,sans-serif;margin:6px 0 0;letter-spacing:-.01em}
+h2{font:600 15px/1.2 Onest,system-ui,sans-serif;margin:2px 0 10px}
+select,input{font:inherit;font-size:16px;color:var(--tx);background:var(--sf2);border:0;border-radius:10px;padding:8px 10px;outline:none;transition:all .25s ease}
+input:focus{box-shadow:0 0 0 2px var(--gold);transform:translateY(-1px)}
+select{font-size:14px;padding:6px 8px}
+input::placeholder{color:var(--mu)}
+.fb,.tabs{display:flex;gap:4px;background:var(--sf);border-radius:12px;padding:4px;overflow-x:auto;margin:12px 0;transition:all .3s ease}
+.tabs.main-tabs{background:transparent;padding:0;margin-bottom:14px}
+.tabs.main-tabs .chipb{background:var(--sf);font-weight:600;font-size:14px;padding:10px 16px;border-radius:12px}
+.tabs.main-tabs .chipb.on{background:var(--gb);color:#171b38;box-shadow:0 4px 12px rgba(245, 184, 61, 0.25)}
+.tabs:not(.main-tabs){display:none}
+.chipb{flex:1;flex:none;border:0;background:none;color:var(--mu);padding:8px 14px;border-radius:9px;font-weight:500;font-size:13px;white-space:nowrap}
+.chipb:hover:not(.on){background:color-mix(in srgb,var(--sf2) 60%,transparent);color:var(--tx)}
+.chipb.on{background:var(--sf2);color:var(--tx)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.card{background:var(--sf);border-radius:16px;padding:14px;transition:box-shadow .3s ease}
+.card:hover{box-shadow:0 6px 20px rgba(0,0,0,.15)}
+.sr{position:relative}.sr input{width:100%;padding:12px 14px;border-radius:12px}
+.dd{position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:10;background:var(--sf2);border-radius:12px;max-height:min(320px,40vh);overflow:auto;display:none;box-shadow:0 12px 32px rgba(0,0,0,.4)}
+.dd[style*="display: block"]{animation:dropDown .25s cubic-bezier(.175,.885,.32,1.275)}
+.dd>div{padding:8px 12px;min-height:46px;cursor:pointer;display:flex;align-items:center;gap:10px;border-top:1px solid var(--ln);transition:background .2s ease}.dd>div:first-child{border-top:0}.dd>div:hover{background:var(--ln)}
+.dd .dn{flex:1;line-height:1.25}.dd b{font:700 13px Unbounded,Onest,sans-serif;color:var(--gold)}
+.mu{color:var(--mu);font-size:12.5px;overflow-wrap:anywhere}
+.row{border-left:4px solid var(--tc,var(--ln));padding:11px 2px 11px 12px;border-bottom:1px solid var(--ln);animation:fadeSlideIn .3s ease-out backwards}.row:last-child{border-bottom:0}
+.top .nm{flex:1;font-weight:600;overflow-wrap:anywhere}
+.tag{flex:none;min-width:36px;text-align:center;padding:4px 0;border-radius:6px;font:700 10.5px Unbounded,Onest,sans-serif;color:var(--tc);background:color-mix(in srgb,var(--tc) 16%,transparent)}
+.pr{flex:none;font:700 14px Unbounded,Onest,sans-serif;color:var(--gold);white-space:nowrap;padding-top:3px}
+.row>.top{display:flex;gap:10px;align-items:flex-start}
+.meta{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;margin:3px 0 2px;font-weight:400}
+.dm{width:34px;height:5px;border-radius:3px;background:var(--ln);overflow:hidden}.dm i{display:block;height:100%;background:var(--gold);transition:width .4s cubic-bezier(.4,0,.2,1)}
+.dx{font-size:12px;color:var(--mu)}
+.tr{font-size:12px;font-weight:500;display:inline-flex;align-items:center;gap:4px}.tr:before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.tS{color:var(--mu)}.tH{color:var(--gold)}.tU{color:var(--bad)}.tO{color:var(--r5)}
+.ctl{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;align-items:center}
+.stp{display:inline-flex;align-items:center;background:var(--sf2);border-radius:10px;overflow:hidden;transition:background .2s ease}
+.stp:hover{background:color-mix(in srgb,var(--sf2) 80%,var(--tx))}
+.stp button{border:0;background:none;color:var(--tx);width:38px;height:36px;font-size:18px}
+.stp button:hover{background:color-mix(in srgb,var(--tx) 10%,transparent)}
+.stp input{width:46px;background:none;border-radius:0;text-align:center;padding:6px 0;outline:none}
+.x{border:0;background:none;color:var(--mu);font-size:24px;margin-left:auto;padding:0 8px;line-height:1;transition:color .2s,transform .2s}.x:hover{color:var(--bad);transform:scale(1.2) rotate(90deg)}
+.btn{background:var(--gb);color:#171b38;border:0;border-radius:11px;padding:10px 16px;font-weight:600;font-size:14px;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.btn:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(245,184,61,.3)}
+.btn.g{background:var(--sf2);color:var(--tx);font-weight:500;padding:8px 12px;font-size:13px;box-shadow:none}
+.btn.g:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.15);background:var(--sf)}
+.sg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;animation:fadeSlideIn .2s ease-out backwards}.sg label{display:flex;flex-direction:column;gap:2px}.sg select{width:100%;padding:8px 6px}
+.empty{color:var(--mu);padding:18px 4px;text-align:center;animation:fadeIn .4s ease}
+.bar{position:sticky;bottom:0;z-index:6;margin-top:14px;padding:12px 14px calc(12px + env(safe-area-inset-bottom,0px));background:var(--sf);border-radius:18px;box-shadow:0 -8px 30px rgba(0,0,0,.4);transition:transform .4s cubic-bezier(.4,0,.2,1)}
+.bal{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:14px}
+.bal .s{display:flex;flex-direction:column;min-width:64px}.bal .s:last-child{text-align:right;align-items:flex-end}
+.bal .s span{font-size:12px;color:var(--mu)}.bal b{font:700 18px/1.25 Unbounded,Onest,sans-serif;transition:color .3s ease}
+.beam{position:relative;height:36px;pointer-events:none}
+.beam i{position:absolute;left:0;right:0;top:12px;height:5px;border-radius:3px;background:linear-gradient(90deg,var(--give),var(--get));transform:rotate(var(--ang,0deg));transition:transform .8s cubic-bezier(.34,1.56,.64,1);transform-origin:center}
+.beam i:before,.beam i:after{content:"";position:absolute;top:-4px;width:13px;height:13px;border-radius:50%;transition:transform .3s ease}
+.beam i:before{left:-3px;background:var(--give)}.beam i:after{right:-3px;background:var(--get)}
+.beam u{position:absolute;left:50%;top:17px;transform:translateX(-50%);border-left:9px solid transparent;border-right:9px solid transparent;border-bottom:14px solid var(--mu);transition:border-bottom-color .3s ease}
+.vd{text-align:center;font-weight:600;font-size:14px;margin-top:2px;animation:fadeIn .3s ease}.ok{color:var(--ok)}.bad{color:var(--bad)}
+.acts{display:flex;gap:8px;margin-top:10px}.acts .btn{display:flex;align-items:center;justify-content:center;gap:8px;min-height:44px}
+.acts #sv{flex:1}.acts .btn.g{width:46px;padding:0}.acts .lb{display:none}.acts #sv .lb{display:inline}
+.ic svg{display:block;width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#hl .row{border-left:0;padding-left:0}
+.nm .mu{font-weight:400}
+.nm,.mu{overflow-wrap:anywhere}
+.tier-group{margin-bottom:20px;animation:fadeSlideIn .4s ease-out backwards}.tier-group h2{margin:0 0 10px;padding:0 4px;font-size:18px;color:var(--gold)}
+.list-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px}
+.list-item{background:var(--sf);border-radius:12px;border-left:4px solid var(--tc,var(--ln));padding:12px;display:flex;flex-direction:column;gap:6px;transition:all .3s cubic-bezier(.4,0,.2,1);animation:fadeSlideIn .3s ease-out backwards}
+.list-item:hover{transform:translateY(-4px);box-shadow:0 8px 24px rgba(0,0,0,.25)}
+#view-list, #view-calc {animation: fadeIn .4s ease;}
+@keyframes fadeSlideIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes dropDown{from{opacity:0;transform:translateY(-8px) scaleY(.95)}to{opacity:1;transform:translateY(0) scaleY(1)}}
+@media(max-width:700px){
+body{padding:10px}.grid{grid-template-columns:1fr}.grid h2{display:none}
+.tabs:not(.main-tabs){display:flex}.tabs:not(.main-tabs) .chipb{flex:1}
+.grid[data-tab="a"]>#pb,.grid[data-tab="b"]>#pa{display:none}
+.card{padding:12px}.bar{margin-top:10px}.bal b{font-size:16px}
+}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style></head><body><div class="wrap">
-<div class="top"><h1>🧮 Value Calculator</h1><select id="lg"><option value="en">English</option><option value="ru">Русский</option></select></div>
-<div class="grid">
-<div class="card"><h2 id="ha"></h2><div class="sr"><input id="sa" autocomplete="off"><div class="dd" id="da"></div></div><div id="la"></div><div class="tot" id="ta">0</div></div>
-<div class="card"><h2 id="hb"></h2><div class="sr"><input id="sb" autocomplete="off"><div class="dd" id="db"></div></div><div id="lb"></div><div class="tot" id="tb">0</div></div>
-</div>
-<div class="card res" id="res"></div>
+<div class="top"><h1>AA Value List</h1><select id="lg" aria-label="Language"><option value="en">English</option><option value="ru">Русский</option><option value="uk">Українська</option></select></div>
 
+<div class="tabs main-tabs">
+    <button class="chipb on" data-a="main" data-v="list" id="nav-list"></button>
+    <button class="chipb" data-a="main" data-v="calc" id="nav-calc"></button>
+</div>
+
+<div class="fb" id="fb" style="margin-bottom: 16px;"></div>
+
+<div id="view-list">
+    <div class="sr" style="margin-bottom:20px;">
+        <svg style="position:absolute; left:14px; top:50%; transform:translateY(-50%); width:20px; height:20px; stroke:var(--mu); fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; pointer-events:none;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <input id="list-q" autocomplete="off" style="padding-left:42px;">
+    </div>
+    <div id="list-content"></div>
+</div>
+
+<div id="view-calc" style="display:none;">
+    <div class="tabs"><button class="chipb on" data-a="tab" data-t="a" id="tba"></button><button class="chipb" data-a="tab" data-t="b" id="tbb"></button></div>
+    <div class="grid" id="grid" data-tab="a">
+        <div class="card" id="pa"><h2 id="ha"></h2><div class="sr"><input id="sa" autocomplete="off"><div class="dd" id="da"></div></div><div id="la"></div></div>
+        <div class="card" id="pb"><h2 id="hb"></h2><div class="sr"><input id="sb" autocomplete="off"><div class="dd" id="db"></div></div><div id="lb"></div></div>
+    </div>
+    <div class="bar"><div class="bal"><div class="s"><span id="bga"></span><b id="ta">0</b></div><div class="beam"><i id="bm"></i><u></u></div><div class="s"><span id="bgb"></span><b id="tb">0</b></div></div>
+    <div class="vd" id="res"></div>
+    <div class="acts"><button class="btn g" data-a="swap" id="sw"></button><button class="btn" data-a="save" id="sv"></button><button class="btn g" data-a="copy" id="cp"></button><button class="btn g" data-a="clr" id="rs"></button></div></div>
+    <div class="card" style="margin-top:14px"><div class="top"><h2 id="hh"></h2><button class="btn g" data-a="hclr" id="hclr"></button></div><div id="hl"></div></div>
+</div>
+
+<p class="mu" id="src" style="text-align:center;margin:14px 0 4px"></p>
 </div>
 <script>
 const D=[
-["SSS",1,`Jio (Over Heaven) / Dio (SHINY);-1;5;O`],
-["SS",1,`Time Saviour / Gohan (SHINY);-1;6
-Jio (Over Heaven) / Dio;38500;7.5
-Time Saviour / Gohan;30000;6
-Blue Flare / Rin (SHINY);26750;5.5`],
-["S+",1,`Dracula / Alucard (SHINY);24000;8;O
-Blue Flare / Rin;21500;6
-Shade Hunter / Zabuza (SHINY);18250;5.5
-Artificial AAA / A21 (SHINY);17000;5.5
-Illusionist / Aizen (SHINY);16000;8.5;O`],
-["S",1,`Shadowgirl / Homura (SHINY);10750;7.5
-Artificial AAA / A21;9750;6
-Pirate King / Gol D. Roger (SHINY);6800;5.5
-Ice Lily / Emilia (SHINY);6250;6
-Skeleton Knight / Skull Knight (SHINY);5650;7
-Demonshade / Hiei (SHINY);4250;5
-Blood / Power (SHINY);3750;6.5
-Viking / Thorfinn (SHINY);3500;6.5;U
-Toby / Tobi (SHINY);3400;4
-Lord Alien King / Boros (SHINY);3250;6`],
-["S-",1,`White Snake / Gin (SHINY);2650;6
-Golden King / Gilgamesh (SHINY);2600;6.5
-Joker / Shidou (SHINY);2550;3
-Saicky / Saiki K (SHINY);2500;4
-Riony / Rias (SHINY);2450;6.5
-Jelly / Jellal (SHINY);2200;5
-Blood Queen / Unohana (SHINY);2100;6
-Phantom King / Lelouch (SHINY);2000;5
-Dracula / Alucard;1800;8
-Illusionist / Aizen;1700;9;H
-Millie / Mamy (SHINY);1625;5.5
-Kumo / Kuma (SHINY);1550;3
-Lily / Lucy (SHINY);1550;5.5`],
-["A+",1,`Green Alien / Piccolo (SHINY);1450;5.5
-Vengeful Swordman / Chihiro (SHINY);1400;6.5;U
-Viking / Thorfinn;1325;6;U
-Enlightened / Buddha (SHINY);1225;5.5
-Joker / Shidou;1225;4
-Demonshade / Hiei;1200;4
-Tango / Tengen;1125;3
-Saiky / Saiki K;1125;3.5
-Elize / Erza (Lightning);1075;5.5
-Trickster / Kisuke (Bankai);1000;5.5
-Kumo / Kuma;975;3.5
-Stringy / Doflamingo (SHINY);965;4
-Infinity Mage / Merlin (SHINY);950;4.5
-Shizo / Shisui (SHINY);950;5.5
-Snake Princess / Boa (SHINY);925;5
-Shadowgirl / Homura;900;8.5
-Pirate King / Gol D. Roger;900;5
-Dark Mage / Judar (SHINY);875;6.5
-Silver King / Rayleigh (SHINY);875;5.5
-Umbra / Cid (SHINY);850;5.5
-Katana / Kenshin (SHINY);800;4.5`],
-["A",1,`Fiery Commander / Yamamoto (SHINY);780;4
-Kimomaro / Kimimaro (SHINY);775;5
-Fan Ninja / Temari (SHINY);775;3.5
-Sea God / Poseidon (SHINY);750;5
-Inhuman / Dazai (SHINY);700;5
-Bomb Angel / Bambietta (SHINY);675;6.5
-Shade Hunter / Zabuza;670;5
-Paragon / Angel (SHINY);665;5
-Agony / Pain (SHINY);650;4
-Jozo / Jozu (SHINY);650;2.5
-Puppet Girl / Yoshino (SHINY);625;7
-Dragon Knight / Issei (SHINY);625;4.5
-Mangaka / Rohan (SHINY);620;4
-Magic Girl / Madoka (SHINY);600;6.5
-Boxo / Boxo (SHINY);600;2
-Gazu / Geto (SHINY);600;5.5
-Chuuni / Chunibyo (SHINY);575;6.5;H
-Switchblade / Nagumo (SHINY);575;4.5;U
-Ice Queen / Esdeath (SHINY);575;5
-Akemy / Akeno (SHINY);550;5.5
-Ghost Lady / Perona (SHINY);525;5
-Saka / Daki (SHINY);525;3.5
-Doll / Gowther (SHINY);500;5
-Toad Sensei / Jiraiya (SHINY);500;5
-Hammerhead / Harribel (SHINY);490;3.5
-Dog Demon / Inuyasha (SHINY);480;5
-Crusader / Heathcliff (SHINY);475;5
-Troy Flame / Roy Mustang (SHINY);475;2.5;U
-Curse / Aki (SHINY);470;5
-Wukong / Jin Mori (SHINY);470;5
-Tattermo / Tatsumi (SHINY);460;4.5
-Fridge / Cooler (SHINY);450;3.5`],
-["A-",1,`Violentine / Mitsukai (SHINY);435;5.5;U
-Blade Beast / Denji (Mythic) (SHINY);430;4.5
-Gravity Mage / Chuya (SHINY);425;4.5
-Katana / Kenshin;415;4
-Kimomaro / Kimimaro;400;2.5
-Fan Ninja / Temari;400;2.5
-Messi / Isagi (SHINY);385;4
-Boxer / Ippo (SHINY);380;3.5
-Scarlet Slayer / Kyōka Izumi (SHINY);380;4
-Jozo / Jozu;380;2
-Saki / Sayaka (SHINY);375;5
-Flash Ninja / Minato (SHINY);375;4
-Catgirl / Koneko (SHINY);375;5
-Skeleton / Brook (SHINY);370;5
-Death Ninja / Hidan (SHINY);370;3
-Robot Sorcerer / Mechamaru (SHINY);360;3
-Weather / Weather Report (SHINY);360;5
-Chance / Kite (SHINY);350;5
-Legendary Assassin / Sakamoto (SHINY);350;4.5;U
-Turtle Master / Roshi (SHINY);350;2.5
-Erza / Erza (Valkyrie) (SHINY);345;5.5
-Kyko / Kyoko (SHINY);345;4.5
-Somber / Osaragi (SHINY);340;4.5;U
-Vengeful Swordman / Chihiro;330;6
-Tiger / Asushi (SHINY);330;3
-Black Dog / Akutagawa (SHINY);325;3
-Erza / Erza (True Heart) (SHINY);320;5.5
-Stitches / Buggy (SHINY);320;1.5
-Ice Lily / Emilia;315;5.5
-Golden King / Gilgamesh;310;5.5
-Kansai / Osaka (SHINY);300;4.5;U`],
-["B+",1,`Virtual Samurai / Klein (SHINY);280;3
-Ratio / Kento Nanami (SHINY);275;5
-Sharkfin / Kisame (SHINY);275;3
-Fiend Girl / Hinamy (SHINY);275;3
-Fire First / Ace (SHINY);270;5
-Idol / Ai Hoshino (SHINY);270;5.5
-Killstreak / Gaku (SHINY);265;4;U
-Elf Mage / Frieren (SHINY);265;3
-Enlightened / Buddha;260;5.5
-Toshin / Toshiro (SHINY);260;4
-Skeleton Knight / Skull Knight;260;5
-Flamefeather / Avdol (SHINY);250;3
-Gas / Gas (SHINY);250;3
-Kobeno / Kobeni (SHINY);245;5
-Hime / Himeno (SHINY);245;4.5
-Boxo / Boxo;235;1
-Dark Mage / Judar;225;5.5
-Siren / Monet (SHINY);225;2.5
-Blood / Power;220;5
-Chuuni / Chunibyo;200;6;H`],
-["B",1,`Lulu / Lelouch;190;4
-Cream / Vanilla Ice (SHINY);190;2.5
-Lucky / Luck (SHINY);185;4
-Morbid / Moria (SHINY);185;2.5
-Dog Demon / Inuyasha;175;3.5
-Wukong / Jin Mori;175;3.5
-Umbra / Cid;170;4.5
-Switchblade / Nagumo;165;4
-Tattermo / Tatsumi;160;3
-Bladebeast / Denji (Secret) (SHINY);155;4
-Mira / Mirko (SHINY);150;3.5
-Fiery Commander / Yamamoto (Hellfire);150;3
-Lord Alien King / Boron;150;3
-Boxer / Ippo;150;3
-Stringy / Doflamingo;145;3
-Erza / Erza (Lightning);135;3
-Messi / Isagi;135;3
-Carrot (SHINY);135;3.5
-Ichi (Full Hollow) / Ichigo (Full Hollow) (SHINY);125;4
-Trickster / Kisuke;120;3.5
-Mirror Ninja / Haku (SHINY);115;4
-Sea God / Poseidon;115;3
-Weather Girl / Nami (SHINY);110;4
-Jellal / Jelly;110;3
-Veko (SHINY);110;5
-Infinity Mage / Merlin;105;3
-Agony / Pain;100;3
-Toad Sensei / Jiraiya;100;3
-Renzi / Renji (SHINY);100;4`],
-["B-",1,`Inhuman / Dazai;90;3
-Idol / Ai Hoshino;85;5.5
-Mangaka / Rohan;80;3
-Saka / Daki;80;3
-Violentine / Mitsukai;80;4.5
-Gazu / Geto (Maximum);75;4
-Ice Queen / Esdeath;70;3.5
-Legendary Assassin / Sakamoto;70;3
-Lyla / Lucy (All Keys);70;4
-Somber / Osaragi;65;3
-Weather Girl / Nami;65;4
-Crusader / Heathcliff;65;2.5
-Green Alien / Piccolo;65;3
-Robot Sorcerer / Mechamaru;65;3
-Millie / Mami;60;2.5
-Shizo / Shisui;60;2.5
-Dragon Knight / Issei;60;2.5
-Paragon / Angel;60;2.5
-Stitches / Buggy;60;1
-Riony / Rias;55;3
-Skeleton / Brook;55;3`],
-["C+",1,`Magic Girl / Madoka;50;3
-Gravity Mage / Chuyo;50;2.5
-Akemy / Akeno;50;3
-Shingo / Shinji (SHINY);50;2.5
-Mecha Freezo / Mecha Frieza (SHINY);50;2.5
-Blade Beast / Denji (Mythic);50;2
-Curse / Aki;50;2
-Catgirl / Koneko;50;2.5
-Death Ninja / Hidan;45;2.5
-Bombietta / Bambietta;45;3
-Troy Flame / Roy Mustang;45;2.5
-Saki / Sayaka;45;2.5
-Hammerhead / Harribel;45;2.5
-Fiend Girl / Hinamy;40;2.5
-Scarlet Slayer / Kyōka Izumi;40;2.5
-Tiger / Asushi;40;2
-Siren / Monet;40;2.5
-Ghost Lady / Perona;40;2
-Virtual Samurai / Klein;40;2
-Erza / Erza (Valkyrie);35;2
-Kansai / Osaka;35;2.5
-Gas / Gas;35;2
-Killstreak / Gaku;35;2
-Flamefeather / Avdol;35;2
-Snake Princess / Boa;35;2
-Elf Mage / Frieren;30;2.5
-Flash Ninja / Minato;30;1.5
-Silver King / Rayleigh;30;1.5
-Tango / Tengen;30;1.5
-Black Dog / Akutagawa;30;1.5
-Blood Queen / Unohana;30;2`],
-["C",1,`Sharkfin / Kisame;25;1
-Kyko / Kyoko;25;1.5
-Hime / Himeno;25;2
-Kobeno / Kobeni;25;2
-Doll / Gowther;25;1.5
-Fridge / Cooler;25;1.5
-Tobi / Toby;20;1
-Erza / Erza (True Heart);20;1.5
-Turtle / Roshi;20;1.5
-Cream / Vanilla Ice;20;1.5
-Lily / Lucy (Missing Keys);15;1
-Toshin / Toshiro;15;1
-Ratio / Kento Nanami;15;2
-Heavy Weather / Weather Report;15;2`],
-["C-",1,`Kit / Kite;10;2
-Lucky / Luck;10;1.5
-Veko;10;2
-White Snake / Gin;10;1
-Morbid / Moria;10;1
-Fire First / Ace;10;1
-Ichi (Full Hollow) / Ichigo (Full Hollow);5;1
-Renzi / Renji;5;1
-Luffo (Marine’s Ford) / Luffy (Marineford);5;1
-Shingo / Shinji;5;1
-Mecha Freezo / Mecha Frieza;5;1
-Puppet Girl / Yoshino;5;1.5
-Carrot;5;1
-Mira / Mirko;5;1`],
-["Relic",0,`Nail (High %);410;5.5
-Nail (Low %);280;5
-Black Blade Autumn Water;65;2
-Hellfire Blade;45;1`],
-["Rainbow skin",0,`Bulmy (Teen) / Bulma RAINBOW;16000;2.5
-Orwin (Headless) / Erwin RAINBOW;9600;3
-Pito (Halloween) / Pito RAINBOW;5300;2`],
-["Skin",0,`Bulmy (Teen) / Bulma (Any Colour);740;6
-Orwin (Delinquent) / Erwin (Any Colour);650;5.5
-Orwin (Headless) / Erwin (Any Colour);550;5.5
-Goju (Vampire) / Gojo;110;3
-Pito (Halloween) / Pito (Any Colour);55;2
-Guts (Slayer) / Guts;10;2
-Menace (Jetstream) / Stain;5;2
-Asto (Angel) / Asta;1;1
-Tangen / Tango (Festival);1;1
-Metal Knight / Metal Knight (Coco);1;1`],
-["Gamepass",0,`Grand Return Bundle;3500;7.5
-Summer Bundle 3;1875;6.5
-Summer Bundle 2;1400;6
-Summer Bundle 1;1000;6
-Shiny Hunter;280;5
-Battle Pass;280;5
-Assassin’s Bundle;280;4
-Starter Bundle;260;4
-Skip 10 levels;240;4
-Display All Units;130;3
-VIP;50;2
-Display 3 Units;25;2
-Unit Storage;20;2`]];
-const ALL=[];D.forEach(([c,u,s])=>s.split("\n").forEach(l=>{const[n,v,d,t]=l.split(";");ALL.push({n,v:+v,d:+d,t:t||"",c,u})}));
+["SSS",1,`Jio (Over Heaven) / Dio (SHINY);-1;5;O;Estimated to be Less than 30 in Game, Rarest Unit in Game`],
+["SS",1,`Time Saviour / Gohan (SHINY);-1;6;;Less than 40 in game, Week 1 Leaderboard Unit\nJio (Over Heaven) / Dio;38500;7.5;;Christmas Update Secret Unit from Frozen Stars\nTime Saviour / Gohan;30000;6;;Less than 60 in Game, Week 1 Leaderboard Unit\nBlue Flare / Rin (SHINY);26750;5.5;;Less than 60 in Game, Update 3 Leaderboard Unit`],
+["S+",1,`Dracula / Alucard (SHINY);24000;8;O;Halloween 2023 Update Secret Unit from Spooky Capsules\nBlue Flare / Rin;21500;6;;Less than 90 in Game, Update 3 Leaderboard Unit\nShade Hunter / Zabuza (SHINY);18250;5.5;;Less than 110 in Game, Update 10 Leaderboard Unit\nArtificial AAA / A21 (SHINY);17000;5.5;;Less than 110 in Game, Update 9 Leaderboard Unit\nIllusionist / Aizen (SHINY);16000;8.5;O;Christmas Secret Capsule/Banner Unit`],
+["S",1,`Shadowgirl / Homura (SHINY);10750;7.5;;Update 13.5 Secret Portal Unit\nArtificial AAA / A21;9750;6;;Less than 165 in Game, Update 9 Leaderboard Unit\nPirate King / Gol D. Roger (SHINY);6800;5.5;;Summer Update Secret Unit from Summer Stars\nIce Lily / Emilia (SHINY);6250;6;;Infinity Castle Limited Leaderboard Unit - Season 2\nSkeleton Knight / Skull Knight (SHINY);5650;7;;Berserk Update Secret Portal Unit\nDemonshade / Hiei (SHINY);4250;5;;Less than 110 in Game, Update 8 Leaderboard Unit\nBlood / Power (SHINY);3750;6.5;;Chainsaw Man Update Devil Star Unit\nViking / Thorfinn (SHINY);3500;6.5;U;Less than 110 in Game, Update 21 Leaderboard Unit\nToby / Tobi (SHINY);3400;4;;Infinity Castle Limited Leaderboard Unit - Season 3\nLord Alien King / Boros (SHINY);3250;6;;One Punch Man Update Secret Portal Unit`],
+["S-",1,`White Snake / Gin (SHINY);2650;6;;Karakora Part 2 Limited Banner Unit\nGolden King / Gilgamesh (SHINY);2600;6.5;;Fate Update Secret Portal Unit\nJoker / Shidou (SHINY);2550;3;;Less than 110 in Game, Update 20 Leaderboard Unit\nSaicky / Saiki K (SHINY);2500;4;;Less than 80 in Game, Update 5 Leaderboard Unit\nRiony / Rias (SHINY);2450;6.5;;Highschool DxD Demon Academy Star Unit\nJelly / Jellal (SHINY);2200;5;;Update 5.5 Dungeon Unit\nBlood Queen / Unohana (SHINY);2100;6;;Infinity Castle Limited Leaderboard Unit - Season 5\nPhantom King / Lelouch (SHINY);2000;5;;Secret Banner Unit, Low chances to Obtain\nDracula / Alucard;1800;8;;Halloween 2023 Update Secret Unit from Spooky Capsules\nIllusionist / Aizen;1700;9;H;Christmas Secret Capsule/Banner Unit\nMillie / Mamy (SHINY);1625;5.5;;Update 13.5 Limited Event Banner Unit\nKumo / Kuma (SHINY);1550;3;;Less than 110 in Game, Update 7 Leaderboard Unit\nLily / Lucy (SHINY);1550;5.5;;Update 5 Limited Banner Unit`],
+["A+",1,`Green Alien / Piccolo (SHINY);1450;5.5;;Update 11.7.5 Frieza Invasion Secret Unit\nVengeful Swordman / Chihiro (SHINY);1400;6.5;U;April Fools Update Secret Unit\nViking / Thorfinn;1325;6;U;Less than 440 in Game, Update 21 Leaderboard Unit\nEnlightened / Buddha (SHINY);1225;5.5;;Christmas Secret Portal Unit\nJoker / Shidou;1225;4;;Less than 440 in Game, Update 20 Leaderboard Unit\nDemonshade / Hiei;1200;4;;Less than 165 in Game, Update 8 Leaderboard Unit\nTango / Tengen;1125;3;;Infinity Castle Capsule Unit - Update 1\nSaiky / Saiki K;1125;3.5;;Less than 120 in Game, Update 5 Leaderboard Unit\nElize / Erza (Lightning);1075;5.5;;Update 5.5 Limited Banner Unit\nTrickster / Kisuke (Bankai);1000;5.5;;Update 3 Limited Banner Unit\nKumo / Kuma;975;3.5;;Less than 165 in Game, Update 7 Leaderboard Unit\nStringy / Doflamingo (SHINY);965;4;;One Piece Dressrosa Update Secret Portal Unit\nInfinity Mage / Merlin (SHINY);950;4.5;;7 Deadly Sins Update Secret Portal Unit\nShizo / Shisui (SHINY);950;5.5;;Update 10.7.5 Storm Raid Secret Unit\nSnake Princess / Boa (SHINY);925;5;;Infinity Castle Capsule Unit - Season 4\nShadowgirl / Homura;900;8.5;;Update 13.5 Secret Unit\nPirate King / Gol D. Roger;900;5;;Summer Update Secret Unit From Summer Stars\nDark Mage / Judar (SHINY);875;6.5;;Christmas Secret Portal Unit\nSilver King / Rayleigh (SHINY);875;5.5;;Infinity Castle Limited Capsule Unit - Season 6\nUmbra / Cid (SHINY);850;5.5;;Halloween 2023 Update Secret Dungeon Unit\nKatana / Kenshin (SHINY);800;4.5;;Less than 110 in Game, Update 15 Leaderboard Unit`],
+["A",1,`Fiery Commander / Yamamoto (SHINY);780;4;;Karakura Part 2 Update Secret Dungeon Unit\nKimomaro / Kimimaro (SHINY);775;5;;Less than 110 in Game, Update 16 Leaderboard Unit\nFan Ninja / Temari (SHINY);775;3.5;;Less than 110 in Game, Update 14 Leaderboard Unit\nSea God / Poseidon (SHINY);750;5;;Summer Update Secret Portal Unit\nInhuman / Dazai (SHINY);700;5;;Update 17.5 Secret Unit\nBomb Angel / Bambietta (SHINY);675;6.5;;Infinity Castle Capsule Unit - Season 9\nShade Hunter / Zabuza;670;5;;Less than 440 in Game, Update 10 Leaderboard Unit\nParagon / Angel (SHINY);665;5;;Chainsawman Update Devil Star Unit\nAgony / Pain (SHINY);650;4;;Naruto Shippuden Update Secret Portal Unit\nJozo / Jozu (SHINY);650;2.5;;Less than 110 in Game, Update 11 Leaderboard Unit\nPuppet Girl / Yoshino (SHINY);625;7;;Easter Egg Update 2023 Unit\nDragon Knight / Issei (SHINY);625;4.5;;Update 15 Anniversary Summon Unit\nMangaka / Rohan (SHINY);620;4;;Update 16.5 Secret Unit\nMagic Girl / Madoka (SHINY);600;6.5;;Update 13.5 Limited Banner Unit\nBoxo / Boxo (SHINY);600;2;;Less than 110 in Game, Update 17 Leaderboard Unit\nGazu / Geto (SHINY);600;5.5;;Update 6.5 Secret Dungeon Unit\nChuuni / Chunibyo (SHINY);575;6.5;H;April Fools Update Limited Banner Unit\nSwitchblade / Nagumo (SHINY);575;4.5;U;Sakamoto Days Update Secret Portal Unit\nIce Queen / Esdeath (SHINY);575;5;;Christmas Update Secret Frozen Portal\nAkemy / Akeno (SHINY);550;5.5;;Highschool DxD Demon Academy Star Unit\nGhost Lady / Perona (SHINY);525;5;;Halloween 2022 Update Limited Capsule Unit\nSaka / Daki (SHINY);525;3.5;;Update 12.5.0 Secret Raid Unit\nDoll / Gowther (SHINY);500;5;;Seven Deadly Sins Part 1 Limited Banner Unit\nToad Sensei / Jiraiya (SHINY);500;5;;Update 18 Limited Banner Unit\nHammerhead / Harribel (SHINY);490;3.5;;Summer Update Summer Stars Unit\nDog Demon / Inuyasha (SHINY);480;5;;Top 1 Leaderboard Unit for Tournament 5-8\nCrusader / Heathcliff (SHINY);475;5;;Update 14 Limited Banner Unit\nTroy Flame / Roy Mustang (SHINY);475;2.5;U;Update 21 Infinity Castle Leaderboard Unit\nCurse / Aki (SHINY);470;5;;Chainsaw Man Update Devil Star Unit\nWukong / Jin Mori (SHINY);470;5;;Top 1 Leaderboard Unit for Tournament 9-12\nTattermo / Tatsumi (SHINY);460;4.5;;Top 1 Leaderboard Unit for Tournament 1-4\nFridge / Cooler (SHINY);450;3.5;;Infinity Castle Capsule Unit - Season 10`],
+["A-",1,`Violentine / Mitsukai (SHINY);435;5.5;U;April Fools Update Limited Banner Unit\nBlade Beast / Denji (Mythic) (SHINY);430;4.5;;Chainsawman Update Devil Star Unit\nGravity Mage / Chuya (SHINY);425;4.5;;Update 17.5 Limited Banner Unit\nKatana / Kenshin;415;4;;Less than 440 in Game, Update 15 Leaderboard Unit\nKimomaro / Kimimaro;400;2.5;;Less than 440 in Game, Update 16 Leaderboard Unit\nFan Ninja / Temari;400;2.5;;Less than 440 in Game, Update 14 Leaderboard Unit\nMessi / Isagi (SHINY);385;4;;Top 1 Leaderboard For Tournament\nBoxer / Ippo (SHINY);380;3.5;;Top 1 Leaderboard For Tournament 13-14\nScarlet Slayer / Kyōka Izumi (SHINY);380;4;;Update 17.5 Limited Banner Unit\nJozo / Jozu;380;2;;Less than 440 in Game, Update 11 Leaderboard Unit\nSaki / Sayaka (SHINY);375;5;;Update 13.5 Limited Banner Unit\nFlash Ninja / Minato (SHINY);375;4;;Infinity Castle Capsule Unit - Season 8\nCatgirl / Koneko (SHINY);375;5;;Highschool DxD Demon Academy Star Unit\nSkeleton / Brook (SHINY);370;5;;Halloween Update 2022 Limited Capsule Unit\nDeath Ninja / Hidan (SHINY);370;3;;Halloween Update 2023 Spooky Stars Unit\nRobot Sorcerer / Mechamaru (SHINY);360;3;;Infinity Castle Limited Leaderboard Unit - Season 12\nWeather / Weather Report (SHINY);360;5;;Update 10 Limited Banner Unit\nChance / Kite (SHINY);350;5;;Update 4 Limited Banner Unit\nLegendary Assassin / Sakamoto (SHINY);350;4.5;U;Sakamoto Days Update Limited Banner Unit\nTurtle Master / Roshi (SHINY);350;2.5;;Infinity Castle Limited Capsule Unit - Season 7\nErza / Erza (Valkyrie) (SHINY);345;5.5;;Update 5.5 Limited Banner Unit\nKyko / Kyoko (SHINY);345;4.5;;Update 13.5 Limited Banner Unit\nSomber / Osaragi (SHINY);340;4.5;U;Sakamoto Days Update Limited Banner Unit\nVengeful Swordman / Chihiro;330;6;;April Fools Update Secret Unit\nTiger / Asushi (SHINY);330;3;;Update 17.5 Limited Banner Unit\nBlack Dog / Akutagawa (SHINY);325;3;;Update 17.5 Limited Banner Unit\nErza / Erza (True Heart) (SHINY);320;5.5;;Update 5.5 Limited Banner Unit\nStitches / Buggy (SHINY);320;1.5;;Top 1 Leaderboard Unit For Tournament 15\nIce Lily / Emilia;315;5.5;;Infinity Castle Capsule Unit - Season 2\nGolden King / Gilgamesh;310;5.5;;Fate Update Secret Portal Unit\nKansai / Osaka (SHINY);300;4.5;U;April Fools Update Limited Banner Unit`],
+["B+",1,`Virtual Samurai / Klein (SHINY);280;3;;Update 14 Limited Banner Unit\nRatio / Kento Nanami (SHINY);275;5;;Update 6 Limited Banner Unit\nSharkfin / Kisame (SHINY);275;3;;Summer Update Summer Stars Unit\nFiend Girl / Hinamy (SHINY);275;3;;Halloween Update 2023 Spooky Stars Unit\nFire First / Ace (SHINY);270;5;;Update 1 Limited Capsule Unit\nIdol / Ai Hoshino (SHINY);270;5.5;;Cake Hunt Battlepass Tier 50\nKillstreak / Gaku (SHINY);265;4;U;Sakamoto Days Update Limited Banner Unit\nElf Mage / Frieren (SHINY);265;3;;Christmas Frozen Capsule/Banner Unit\nEnlightened / Buddha;260;5.5;;Christmas Secret Portal Unit\nToshin / Toshiro (SHINY);260;4;;Christmas Frozen Stars Limited Capsule Unit\nSkeleton Knight / Skull Knight;260;5;;Berserk Secret Portal Unit\nFlamefeather / Avdol (SHINY);250;3;;Summer Update Summer Stars Unit\nGas / Gas (SHINY);250;3;;Halloween Update 2023 Spooky Stars Unit\nKobeno / Kobeni (SHINY);245;5;;Chainsawman Update Devil Stars Unit\nHime / Himeno (SHINY);245;4.5;;Chainsawman Update Devil Stars Unit\nBoxo / Boxo;235;1;;Less than 440 in Game, Update 17 Leaderboard Unit\nDark Mage / Judar;225;5.5;;Christmas Secret Portal Unit\nSiren / Monet (SHINY);225;2.5;;Christmas Frozen Capsule/Banner Unit\nBlood / Power;220;5;;Chainsawman Update Devil Stars Unit\nChuuni / Chunibyo;200;6;H;April Fools Update Limited Banner Unit`],
+["B",1,`Lulu / Lelouch;190;4;;Secret Unit, Very Low Chances To Obtain\nCream / Vanilla Ice (SHINY);190;2.5;;Christmas Frozen Capsule/Banner Unit\nLucky / Luck (SHINY);185;4;;Update 7 Limited Banner Unit\nMorbid / Moria (SHINY);185;2.5;;Halloween 2022 Update Limited Capsule Unit\nDog Demon / Inuyasha;175;3.5;;2nd + 3rd Reward For Tournament\nWukong / Jin Mori;175;3.5;;2nd + 3rd Reward For Tournament\nUmbra / Cid;170;4.5;;Halloween Update 2023 Dungeon Secret Unit\nSwitchblade / Nagumo;165;4;;Sakamoto Days Update Secret Portal Unit\nTattermo / Tatsumi;160;3;;2nd + 3rd Reward For Tournament\nBladebeast / Denji (Secret) (SHINY);155;4;;Chainsawman Update Secret Dungeon Unit\nMira / Mirko (SHINY);150;3.5;;Easter Egg Hunt 2023 Capsule Unit\nFiery Commander / Yamamoto (Hellfire);150;3;;Karakura Part 2 Dungeon Secret Unit\nLord Alien King / Boron;150;3;;One Punch Man Update Secret Portal Unit\nBoxer / Ippo;150;3;;2nd + 3rd Reward For Tournament\nStringy / Doflamingo;145;3;;Dressrosa Update Secret Portal Unit\nErza / Erza (Lightning);135;3;;Update 5.5 Limited Banner Unit\nMessi / Isagi;135;3;;2nd + 3rd Reward For Tournament\nCarrot (SHINY);135;3.5;;Easter Egg Hunt 2023 Capsule Unit\nIchi (Full Hollow) / Ichigo (Full Hollow) (SHINY);125;4;;Update 3 Limited Banner Unit\nTrickster / Kisuke;120;3.5;;Update 3 Limited Banner Unit\nMirror Ninja / Haku (SHINY);115;4;;Christmas Frozen 2022 Update Limited Capsule Unit\nSea God / Poseidon;115;3;;Summer Update Summer Secret Portal Unit\nWeather Girl / Nami (SHINY);110;4;;Cake Hunt Battlepass Tier 25\nJellal / Jelly;110;3;;Update 5.5 Dungeon Unit\nVeko (SHINY);110;5;;April Fools 2023 Rare Fusion Secret Unit\nInfinity Mage / Merlin;105;3;;7 Deadly Sins Update Secret Portal Unit\nAgony / Pain;100;3;;Naruto Shippuden Update Secret Portal Unit\nToad Sensei / Jiraiya;100;3;;Update 18 Limited Banner Unit\nRenzi / Renji (SHINY);100;4;;Update 2 Limited Capsule Unit`],
+["B-",1,`Inhuman / Dazai;90;3;;Update 17.5 Secret Portal Unit\nIdol / Ai Hoshino;85;5.5;;Cake Hunt Battlepass Tier 50\nMangaka / Rohan;80;3;;Update 16 Raid Secret Unit\nSaka / Daki;80;3;;Update 12.5 Raid Secret Unit\nViolentine / Mitsukai;80;4.5;;April Fools Update Limited Banner Unit\nGazu / Geto (Maximum);75;4;;Update 6.5 Secret Dungeon Unit\nIce Queen / Esdeath;70;3.5;;Christmas Frozen Capsule Stars Secret Unit\nLegendary Assassin / Sakamoto;70;3;;Sakamoto Days Update Limited Banner Unit\nLyla / Lucy (All Keys);70;4;;Update 5.5 Limited Banner Unit\nSomber / Osaragi;65;3;;Sakamoto Days Update Limited Banner Unit\nWeather Girl / Nami;65;4;;Cake Hunt Battlepass Tier 25\nCrusader / Heathcliff;65;2.5;;Update 14 Limited Banner Unit\nGreen Alien / Piccolo;65;3;;Update 11.7.5 Frieza Invasion Secret Unit\nRobot Sorcerer / Mechamaru;65;3;;Infinity Castle Limited Leaderboard Unit - Season 12\nMillie / Mami;60;2.5;;Update 13.5 Limited Banner Unit\nShizo / Shisui;60;2.5;;Update 10.7.5 Storm Raid Secret Unit\nDragon Knight / Issei;60;2.5;;Update 15 Anniversary Summon Unit\nParagon / Angel;60;2.5;;Chainsawman Update Devil Stars Unit\nStitches / Buggy;60;1;;2nd + 3rd Reward For Tournament\nRiony / Rias;55;3;;Highschool DxD Demon Academy Star Unit\nSkeleton / Brook;55;3;;Halloween 2022 Update Limited Capsule Unit`],
+["C+",1,`Magic Girl / Madoka;50;3;;Update 13.5 Limited Banner Unit\nGravity Mage / Chuyo;50;2.5;;Update 17.5 Limited Banner Unit\nAkemy / Akeno;50;3;;Highschool DxD Demon Academy Star Unit\nShingo / Shinji (SHINY);50;2.5;;Update 7.6 Limited Event Quest Unit\nMecha Freezo / Mecha Frieza (SHINY);50;2.5;;Update 5.6 Limited Code Unit\nBlade Beast / Denji (Mythic);50;2;;Chainsawman Update Secret Dungeon Unit\nCurse / Aki;50;2;;Chainsawman Update Devil Star Unit\nCatgirl / Koneko;50;2.5;;Highschool DxD Demon Academy Star Unit\nDeath Ninja / Hidan;45;2.5;;Halloween Update 2023 Spooky Stars Unit\nBombietta / Bambietta;45;3;;Infinity Castle Capsule Unit - Season 9\nTroy Flame / Roy Mustang;45;2.5;;Update 21 Infinity Castle Leaderboard Unit\nSaki / Sayaka;45;2.5;;Update 13.5 Limited Banner Unit\nHammerhead / Harribel;45;2.5;;Summer Update Summer Star Capsule Unit\nFiend Girl / Hinamy;40;2.5;;Halloween Update 2023 Spooky Stars Unit\nScarlet Slayer / Kyōka Izumi;40;2.5;;Update 17.5 Limited Banner Unit\nTiger / Asushi;40;2;;Update 17.5 Limited Banner Unit\nSiren / Monet;40;2.5;;Christmas Frozen Capsule/Banner Unit\nGhost Lady / Perona;40;2;;Halloween 2022 Update Limited Capsule Unit\nVirtual Samurai / Klein;40;2;;Update 14 Limited Banner Unit\nErza / Erza (Valkyrie);35;2;;Update 5.5 Limited Banner Unit\nKansai / Osaka;35;2.5;;April Fools Update Limited Banner Unit\nGas / Gas;35;2;;Halloween 2023 Update Limited Capsule Unit\nKillstreak / Gaku;35;2;;Sakamoto Days Update Limited Banner Unit\nFlamefeather / Avdol;35;2;;Summer Update Summer Stars Capsule Unit\nSnake Princess / Boa;35;2;;Infinity Castle Capsule Unit - Season 4\nElf Mage / Frieren;30;2.5;;Christmas Frozen Capsule/Banner Unit\nFlash Ninja / Minato;30;1.5;;Infinity Castle Capsule Unit - Season 8\nSilver King / Rayleigh;30;1.5;;Infinity Castle Limited Capsule Unit - Season 6\nTango / Tengen;30;1.5;;Infinity Castle Capsule Unit - Update 1\nBlack Dog / Akutagawa;30;1.5;;Update 17.5 Limited Banner Unit\nBlood Queen / Unohana;30;2;;Infinity Castle Limited Leaderboard Unit - Season 5`],
+["C",1,`Sharkfin / Kisame;25;1;;Summer Update Summer Star Capsule Unit\nKyko / Kyoko;25;1.5;;Update 13.5 Limited Banner Unit\nHime / Himeno;25;2;;Chainsawman Update Devil Star Unit\nKobeno / Kobeni;25;2;;Chainsawman Update Devil Star Unit\nDoll / Gowther;25;1.5;;7 Deadly Sins Update Limited Banner Unit\nFridge / Cooler;25;1.5;;Infinity Castle Capsule Unit - Season 10\nTobi / Toby;20;1;;Infinity Castle Limited Leaderboard Unit - Season 3\nErza / Erza (True Heart);20;1.5;;Update 5.5 Limited Banner Unit\nTurtle / Roshi;20;1.5;;Infinity Castle Limited Capsule Unit - Season 7\nCream / Vanilla Ice;20;1.5;;Christmas Frozen Capsule/Banner Unit\nLily / Lucy (Missing Keys);15;1;;Update 5.5 Limited Banner Unit\nToshin / Toshiro;15;1;;Christmas Frozen Capsule Unit\nRatio / Kento Nanami;15;2;;Update 6 Limited Banner Unit\nHeavy Weather / Weather Report;15;2;;Update 10 Limited Banner Unit`],
+["C-",1,`Kit / Kite;10;2;;Update 4 Limited Banner Unit\nLucky / Luck;10;1.5;;Update 7 Limited Banner Unit\nVeko;10;2;;April Fools Secret Unit\nWhite Snake / Gin;10;1;;Karakura Part 2 Limited Banner Unit\nMorbid / Moria;10;1;;Halloween 2022 Update Limited Capsule Unit\nFire First / Ace;10;1;;Update 1 Limited Capsule Unit\nIchi (Full Hollow) / Ichigo (Full Hollow);5;1;;Update 3 Limited Capsule Unit\nRenzi / Renji;5;1;;Update 2 Limited Capsule Unit\nLuffo (Marine’s Ford) / Luffy (Marineford);5;1;;Update 1 Limited Event Quest Unit\nShingo / Shinji;5;1;;Update 7.6 Limited Event Quest Unit\nMecha Freezo / Mecha Frieza;5;1;;Update 5.6 Limited Code Unit\nPuppet Girl / Yoshino;5;1.5;;Easter Egg Hunt 2023 Capsule Unit\nCarrot;5;1;;Easter Egg Hunt 2023 Capsule Unit\nMira / Mirko;5;1;;Easter Egg Hunt 2023 Capsule Unit`],
+["Relic",0,`Nail (High %);410;5.5;;Chainsaw Man Update Relic\nNail (Low %);280;5;;Chainsaw Man Update Relic\nBlack Blade Autumn Water;65;2;;Halloween Event 2022 Relic\nHellfire Blade;45;1;;Karakura Update Relic`],
+["Rainbow skin",0,`Bulmy (Teen) / Bulma RAINBOW;16000;2.5;;Update 5.5 Limited Capsule Skin\nOrwin (Headless) / Erwin RAINBOW;9600;3;;Halloween 2022 Limited Capsule Skin\nPito (Halloween) / Pito RAINBOW;5300;2;;Halloween 2022 Limited Capsule Skin`],
+["Skin",0,`Bulmy (Teen) / Bulma (Any Colour);740;6;;Update 5.5 Limited Capsule Skin\nOrwin (Delinquent) / Erwin (Any Colour);650;5.5;;Update 5.5 Limited Capsule Skin\nOrwin (Headless) / Erwin (Any Colour);550;5.5;;Halloween 2022 Limited Capsule Skin\nGoju (Vampire) / Gojo;110;3;;Halloween 2022 Limited Capsule Skin\nPito (Halloween) / Pito (Any Colour);55;2;;Halloween 2022 Limited Capsule Skin\nGuts (Slayer) / Guts;10;2;;Halloween 2023 Update Limited Capsule Skin\nMenace (Jetstream) / Stain;5;2;;Christmas 2024 Update Frozen Capsule Skin\nAsto (Angel) / Asta;1;1;;Christmas 2022 Update Frozen Capsule Skin\nTangen / Tango (Festival);1;1;;Summer 2023 Update Summer Capsule Skin\nMetal Knight / Metal Knight (Coco);1;1;;Summer 2023 Update Summer Capsule Skin\nMost Other Skins;0;0;;Basically Any Event Skin`],
+["Gamepass",0,`Grand Return Bundle;3500;7.5;;500 Rerolls/50,000 Summer Pearls/50,000 Gems/25x Perfect Stat Cubes\nSummer Bundle 3;1875;6.5;;150 Rerolls/100,000 Summer Pearls/40x Sunny Stars\nSummer Bundle 2;1400;6;;75 Rerolls/60,000 Summer Pearls/20x Sunny Stars\nSummer Bundle 1;1000;6;;50 Rerolls/30,000 Summer Pearls/10x Sunny Stars\nShiny Hunter;280;5;;3x more likely to pull a shiny unit (3%)\nBattle Pass;280;5;;Battle pass restarts every few updates\nAssassin’s Bundle;280;4;;10 Rerolls/1,000 Assassin’s Tokens/10 Star Fruit Capsule/10x Stat Cubes/10x Cursed Tokens\nStarter Bundle;260;4;;10 Rerolls/10,000 Gems/30 Star Fruit Capsule/1x Mythic Unit (Honey)\nSkip 10 levels;240;4;;Skip 10 levels ahead in the Battle Pass\nDisplay All Units;130;3;;Display 6 units in the lobby around you\nVIP;50;2;;20% off summons, rainbow nametag, 2x time machine rewards\nDisplay 3 Units;25;2;;Display 3 units in the lobby around you\nUnit Storage;20;2;;100 extra unit storage`]];
+
+const ALL=[];D.forEach(([c,u,s])=>s.split("\n").forEach(l=>{const[n,v,d,t,inf]=l.split(";");ALL.push({n,v:+v,d:+d,t:t||"",inf:inf||"",c,u})}));
 const ST={DMG:[0,20,110,475],SPA:[0,20,90,425],RNG:[0,20,60,375]},SL=["—","S+…S-","SS","SSS"];
-const side={a:[],b:[]};let L="en";
-const T={en:{ha:"You give",hb:"You get",ph:"Search: unit, skin, relic…",U:"unstable",H:"hyped",O:"overpriced",dem:"demand",neg:"price negotiable",qty:"qty",none:"Not found",empty:"Add items",eq:"Roughly even trade (difference ",plus:"You gain: +",minus:"You lose: −"},ru:{ha:"Вы отдаёте",hb:"Вы получаете",ph:"Поиск: юнит, скин, реликвия…",U:"нестабилен",H:"хайп",O:"переоценён",dem:"спрос",neg:"цена договорная",qty:"кол-во",none:"Не найдено",empty:"Добавьте предметы",eq:"Примерно равная сделка (разница ",plus:"Вы в плюсе: +",minus:"Вы в минусе: −"}};
-const CAT={ru:{Relic:"Реликвия","Rainbow skin":"Rainbow скин",Skin:"Скин",Gamepass:"Геймпасс"}};
-const tr=k=>T[L][k],cat=c=>(L==="ru"&&CAT.ru[c])||c;
-const $=i=>document.getElementById(i),esc=s=>s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-const fmt=n=>Math.round(n).toLocaleString(L==="ru"?"ru-RU":"en-US");
-const price=r=>{const i=ALL[r.i];if(i.v<0)return 0;let p=i.v;if(i.u)for(const k in ST)p+=ST[k][r.s[k]];return p*r.q};
-function render(){let tot={};for(const k of["a","b"]){
-$("l"+k).innerHTML=side[k].map((r,j)=>{const i=ALL[r.i];
-const st=i.u?Object.keys(ST).map(s=>`<label class="mu">${s} <select data-k="${k}" data-j="${j}" data-s="${s}">${SL.map((o,x)=>`<option value="${x}"${r.s[s]==x?" selected":""}>${o}</option>`).join("")}</select></label>`).join(""):"";
-return `<div class="row"><div class="top"><div>${esc(i.n)}<div class="mu">${cat(i.c)}${i.t?" · "+tr(i.t):""} · ${tr("dem")} ${i.d}${i.v<0?" · "+tr("neg"):""}</div></div><div><b>${fmt(price(r))}</b> <button class="x" data-k="${k}" data-j="${j}" data-rm="1">×</button></div></div><div class="ctl">${st}<label class="mu">${tr("qty")} <input class="q" type="number" min="1" value="${r.q}" data-k="${k}" data-j="${j}" data-q="1"></label></div></div>`}).join("");
-tot[k]=side[k].reduce((s,r)=>s+price(r),0);$("t"+k).textContent=fmt(tot[k])}
-const d=tot.b-tot.a,m=Math.max(tot.a,tot.b),r=$("res");
-if(!m){r.textContent=tr("empty");r.className="card res";return}
-const p=Math.abs(d)/m*100;
-if(p<=5){r.textContent=tr("eq")+fmt(Math.abs(d))+")";r.className="card res"}
-else if(d>0){r.textContent=`${tr("plus")}${fmt(d)} (${p.toFixed(0)}%)`;r.className="card res ok"}
-else{r.textContent=`${tr("minus")}${fmt(-d)} (${p.toFixed(0)}%)`;r.className="card res bad"}}
+const T={
+en:{nav_list:"Value List",nav_calc:"Calculator",list_ph:"Search units, skins, relics...",ha:"You give",hb:"You get",ph:"Search: unit, skin, relic…",hint:"Search above or pick from the list to add items",S:"stable",U:"unstable",H:"hyped",O:"overpriced",dem:"demand",neg:"price negotiable",none:"Not found",empty:"Add items",eq:"Roughly even trade (difference ",plus:"You gain: +",minus:"You lose: −",src:"Data taken from the official value list:",lnk:"open the sheet",save:"Save trade",saved:"Saved ✓",hh:"Trade history",clr:"Clear all",noh:"No saved trades yet",load:"Load",gave:"Gave",got:"Got",f_all:"All",f_unit:"Units",f_skin:"Skins",f_relic:"Relics",f_pass:"Passes",stats:"Stats",swap:"Swap",copy:"Copy",copied:"Copied ✓",reset:"Reset"},
+ru:{nav_list:"Валуе лист",nav_calc:"Калькулятор",list_ph:"Поиск юнитов, скинов...",ha:"Вы отдаёте",hb:"Вы получаете",ph:"Поиск: юнит, скин, реликвия…",hint:"Найдите предмет выше или выберите из списка",S:"стабилен",U:"нестабилен",H:"хайп",O:"переоценён",dem:"спрос",neg:"цена договорная",none:"Не найдено",empty:"Добавьте предметы",eq:"Примерно равная сделка (разница ",plus:"Вы в плюсе: +",minus:"Вы в минусе: −",src:"Данные взяты с официального валуе листа:",lnk:"открыть таблицу",save:"Сохранить трейд",saved:"Сохранено ✓",hh:"История трейдов",clr:"Очистить",noh:"Сохранённых трейдов пока нет",load:"Загрузить",gave:"Отдал",got:"Получил",f_all:"Все",f_unit:"Юниты",f_skin:"Скины",f_relic:"Реликвии",f_pass:"Геймпассы",stats:"Статы",swap:"Поменять",copy:"Копировать",copied:"Скопировано ✓",reset:"Сбросить"},
+uk:{nav_list:"Валує лист",nav_calc:"Калькулятор",list_ph:"Пошук юнітів, скінів...",ha:"Ви віддаєте",hb:"Ви отримуєте",ph:"Пошук: юніт, скін, реліквія…",hint:"Знайдіть предмет вище або оберіть зі списку",S:"стабільний",U:"нестабільний",H:"хайп",O:"переоцінений",dem:"попит",neg:"ціна договірна",none:"Не знайдено",empty:"Додайте предмети",eq:"Приблизно рівна угода (різниця ",plus:"Ви в плюсі: +",minus:"Ви в мінусі: −",src:"Дані взято з офіційного валуе листа:",lnk:"відкрити таблицю",save:"Зберегти трейд",saved:"Збережено ✓",hh:"Історія трейдів",clr:"Очистити",noh:"Збережених трейдів поки немає",load:"Завантажити",gave:"Віддав",got:"Отримав",f_all:"Усі",f_unit:"Юніти",f_skin:"Скіни",f_relic:"Реліквії",f_pass:"Геймпаси",stats:"Стати",swap:"Поміняти",copy:"Копіювати",copied:"Скопійовано ✓",reset:"Скинути"}};
+const CAT={uk:{Relic:"Реліквія","Rainbow skin":"Rainbow скін",Skin:"Скін",Gamepass:"Геймпас"},ru:{Relic:"Реликвия","Rainbow skin":"Rainbow скин",Skin:"Скин",Gamepass:"Геймпасс"}},LOC={en:"en-US",ru:"ru-RU",uk:"uk-UA"};
+let L="en",F="all",TAB="a";const side={a:[],b:[]};
+const $=i=>document.getElementById(i),esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const tr=k=>T[L][k],cat=c=>(CAT[L]&&CAT[L][c])||c,fmt=n=>Math.round(n).toLocaleString(LOC[L]);
+const sx=r=>ALL[r.i].u?Object.keys(ST).reduce((t,k)=>t+ST[k][r.s[k]],0):0;
+const price=r=>{const i=ALL[r.i];return i.v<0?0:(i.v+sx(r))*r.q};
+const tot=k=>side[k].reduce((s,r)=>s+price(r),0);
+const lsGet=(k,d)=>{try{const v=localStorage.getItem(k);return v===null?d:v}catch(e){return d}};
+const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
+const pk=a=>a.map(r=>({n:ALL[r.i].n,c:ALL[r.i].c,q:r.q,s:{...r.s}}));
+const un=a=>(a||[]).map(x=>({i:ALL.findIndex(y=>y.n===x.n&&y.c===x.c),q:x.q||1,s:{DMG:0,SPA:0,RNG:0,...x.s},o:0})).filter(r=>r.i>=0);
+let H=[];try{H=JSON.parse(lsGet("aa_hist","[]"))}catch(e){}
+try{const cur=JSON.parse(lsGet("aa_cur","{}"));side.a=un(cur.a);side.b=un(cur.b)}catch(e){}
+
+const match=it=>F==="all"||(F==="unit"&&it.u)||(F==="skin"&&/skin/i.test(it.c))||(F==="relic"&&it.c==="Relic")||(F==="pass"&&it.c==="Gamepass");
+const TC=i=>!i.u?"var(--rx)":i.c==="SSS"?"var(--r5)":i.c==="SS"?"var(--r4)":/^S/.test(i.c)?"var(--r3)":/^A/.test(i.c)?"var(--r2)":/^B/.test(i.c)?"var(--r1)":"var(--r0)";
+const tag=i=>`<span class="tag" style="--tc:${TC(i)}">${esc(i.u?i.c:cat(i.c))}</span>`;
+const chips=i=>`<span class="dm" title="${tr("dem")} ${i.d}"><i style="width:${Math.min(100,i.d/9*100)}%"></i></span><span class="dx">${tr("dem")} ${i.d}</span><span class="tr t${i.t||"S"}">${tr(i.t||"S")}</span>${i.v<0?`<span class="tr tO">${tr("neg")}</span>`:""}`;
+
+function renderValueList(){
+    const q=$("list-q").value.trim().toLowerCase();
+    let html="";
+    let delayCounter=0;
+    D.forEach(([c,u,s])=>{
+        const items = s.split("\n").map(l=>{
+            const [n,v,d,t,inf]=l.split(";");
+            return {n,v:+v,d:+d,t:t||"",inf:inf||"",c,u};
+        }).filter(i => match(i) && (!q || i.n.toLowerCase().includes(q) || i.c.toLowerCase().includes(q)));
+        
+        if(items.length>0){
+            html+=`<div class="tier-group" style="animation-delay:${delayCounter*0.03}s"><h2>${cat(c)}</h2><div class="list-grid">`;
+            items.forEach(i=>{
+                html+=`<div class="list-item" style="--tc:${TC(i)}; animation-delay:${delayCounter*0.015}s">
+                    <div class="top">${tag(i)}<div class="nm">${esc(i.n)}<div class="meta">${chips(i)}</div>${i.inf?`<div class="mu">${esc(i.inf)}</div>`:""}</div></div>
+                    <div class="pr">${i.v<0?"?":fmt(i.v)}</div>
+                </div>`;
+                delayCounter++;
+            });
+            html+=`</div></div>`;
+        }
+    });
+    $("list-content").innerHTML = html||`<div class="empty">${tr("none")}</div>`;
+}
+$("list-q").addEventListener("input", renderValueList);
+
+function render(){
+for(const k of["a","b"])$("l"+k).innerHTML=side[k].map((r,j)=>{const i=ALL[r.i],s=sx(r),at=`data-k="${k}" data-j="${j}"`;
+return `<div class="row" style="--tc:${TC(i)}"><div class="top">${tag(i)}<div class="nm">${esc(i.n)}<div class="meta">${chips(i)}</div>${i.inf?`<div class="mu">${esc(i.inf)}</div>`:""}</div><div class="pr">${fmt(price(r))}</div></div><div class="ctl"><span class="stp"><button ${at} data-a="m">−</button><input type="number" min="1" inputmode="numeric" value="${r.q}" ${at} data-a="q"><button ${at} data-a="p">+</button></span>${i.u?`<button class="btn g" ${at} data-a="t">${tr("stats")}${s?" +"+fmt(s):""} ${r.o?"▴":"▾"}</button>`:""}<button class="x" ${at} data-a="x">×</button></div>${i.u&&r.o?`<div class="ctl sg">${Object.keys(ST).map(n=>`<label class="mu">${n} <select ${at} data-s="${n}">${SL.map((o,x)=>`<option value="${x}"${r.s[n]==x?" selected":""}>${o}</option>`).join("")}</select></label>`).join("")}</div>`:""}</div>`}).join("");
+const a=tot("a"),b=tot("b"),df=b-a,m=Math.max(a,b),p=m?Math.abs(df)/m*100:0,v=$("res");
+$("ta").textContent=fmt(a);$("tb").textContent=fmt(b);
+const maxAng = 3.5; 
+$("bm").style.setProperty("--ang",(m?Math.max(-maxAng,Math.min(maxAng,(b-a)/m*(maxAng*2))):0)+"deg");
+if(!m){v.textContent=tr("empty");v.className="vd"}
+else if(p<=5){v.textContent=tr("eq")+fmt(Math.abs(df))+")";v.className="vd"}
+else if(df>0){v.textContent=`${tr("plus")}${fmt(df)} (${p.toFixed(0)}%)`;v.className="vd ok"}
+else{v.textContent=`${tr("minus")}${fmt(-df)} (${p.toFixed(0)}%)`;v.className="vd bad"}
+$("grid").dataset.tab=TAB;for(const k of["a","b"]){const bt=$("tb"+k);bt.textContent=tr(k==="a"?"ha":"hb")+" ("+side[k].length+")";bt.classList.toggle("on",TAB===k);if(!side[k].length)$("l"+k).innerHTML=`<div class="empty">${tr("hint")}</div>`}
+lsSet("aa_cur",JSON.stringify({a:pk(side.a),b:pk(side.b)}))}
+const lb=a=>a.map(x=>esc(x.n)+(x.q>1?" ×"+x.q:"")).join(", ")||"—";
+
+function hist(){$("hl").innerHTML=H.length?H.map((h,j)=>{const d=h.tb-h.ta;return `<div class="row"><div class="top"><span class="mu">${new Date(h.t).toLocaleString(L==="en"?"en-GB":LOC[L])}</span><span><button class="btn g" data-a="ld" data-j="${j}">${tr("load")}</button><button class="x" data-a="dl" data-j="${j}">×</button></span></div><div>${tr("gave")}: ${lb(h.a)} <b>(${fmt(h.ta)})</b></div><div>${tr("got")}: ${lb(h.b)} <b>(${fmt(h.tb)})</b></div><div class="${d>0?"ok":d<0?"bad":""}"><b>${d>0?"+":d<0?"−":""}${fmt(Math.abs(d))}</b></div></div>`}).join(""):`<div class="mu">${tr("noh")}</div>`}
+const FS=[["all","f_all"],["unit","f_unit"],["skin","f_skin"],["relic","f_relic"],["pass","f_pass"]];
+const fbar=()=>{$("fb").innerHTML=FS.map(([f,k])=>`<button class="chipb${F===f?" on":""}" data-a="f" data-f="${f}">${tr(k)}</button>`).join("")};
+const txt=()=>{const f=k=>side[k].map(r=>ALL[r.i].n+(sx(r)?` [+${sx(r)}]`:"")+(r.q>1?" ×"+r.q:"")).join(", ")||"—";return `${tr("gave")}: ${f("a")} (${fmt(tot("a"))})\n${tr("got")}: ${f("b")} (${fmt(tot("b"))})\n${$("res").textContent}`};
+const copy=async s=>{try{await navigator.clipboard.writeText(s);return 1}catch(e){try{const x=document.createElement("textarea");x.value=s;document.body.appendChild(x);x.select();const ok=document.execCommand("copy");x.remove();return ok}catch(e2){return 0}}};
+const flash=(el,m)=>{const o=el.innerHTML;el.textContent=m;setTimeout(()=>{el.innerHTML=o},1400)};
+document.addEventListener("click",e=>{const t=e.target.closest("[data-a]");if(!t)return;const a=t.dataset.a;
+if(a==="main"){
+    const v=t.dataset.v;
+    $("nav-list").classList.toggle("on",v==="list");
+    $("nav-calc").classList.toggle("on",v==="calc");
+    $("view-list").style.display=v==="list"?"block":"none";
+    $("view-calc").style.display=v==="calc"?"block":"none";
+    return;
+}
+if(a==="tab"){TAB=t.dataset.t;render();return}
+if(a==="f"){F=t.dataset.f;fbar();renderValueList();return}
+if(a==="swap"){[side.a,side.b]=[side.b,side.a];render();return}
+if(a==="clr"){side.a=[];side.b=[];render();return}
+if(a==="save"){if(!side.a.length&&!side.b.length)return;H.unshift({t:Date.now(),a:pk(side.a),b:pk(side.b),ta:tot("a"),tb:tot("b")});H=H.slice(0,100);lsSet("aa_hist",JSON.stringify(H));hist();flash(t,tr("saved"));return}
+if(a==="copy"){copy(txt()).then(ok=>flash(t,ok?"✓":"✗"));return}
+if(a==="hclr"){H=[];lsSet("aa_hist","[]");hist();return}
+if(a==="dl"){H.splice(+t.dataset.j,1);lsSet("aa_hist",JSON.stringify(H));hist();return}
+if(a==="ld"){const h=H[+t.dataset.j];side.a=un(h.a);side.b=un(h.b);render();window.scrollTo(0,0);return}
+const r=side[t.dataset.k]&&side[t.dataset.k][+t.dataset.j];if(!r)return;
+if(a==="m")r.q=Math.max(1,r.q-1);else if(a==="p")r.q++;else if(a==="t")r.o=!r.o;else if(a==="x")side[t.dataset.k].splice(+t.dataset.j,1);
+render()});
+document.addEventListener("change",e=>{const t=e.target;
+if(t.id==="lg"){lsSet("aa_lang",t.value);setLang(t.value);return}
+const r=side[t.dataset.k]&&side[t.dataset.k][+t.dataset.j];if(!r)return;
+if(t.dataset.a==="q")r.q=Math.max(1,parseInt(t.value)||1);else if(t.dataset.s)r.s[t.dataset.s]=+t.value;
+render()});
 for(const k of["a","b"]){const inp=$("s"+k),dd=$("d"+k);
-inp.addEventListener("input",()=>{const q=inp.value.trim().toLowerCase();if(!q){dd.style.display="none";return}
-const m=[];ALL.forEach((x,i)=>{if(m.length<12&&x.n.toLowerCase().includes(q))m.push(i)});
-dd.innerHTML=m.map(i=>`<div data-i="${i}"><span>${esc(ALL[i].n)}</span><span class="mu">${cat(ALL[i].c)} · ${ALL[i].v<0?"?":fmt(ALL[i].v)}</span></div>`).join("")||'<div class="mu">${tr("none")}</div>';dd.style.display="block"});
-dd.addEventListener("mousedown",e=>{const el=e.target.closest("[data-i]");if(!el)return;e.preventDefault();
-side[k].push({i:+el.dataset.i,q:1,s:{DMG:0,SPA:0,RNG:0}});inp.value="";dd.style.display="none";render()});
-inp.addEventListener("blur",()=>dd.style.display="none");
-$("l"+k).addEventListener("click",e=>{if(e.target.dataset.rm){side[k].splice(+e.target.dataset.j,1);render()}});
-$("l"+k).addEventListener("change",e=>{const t=e.target,r=side[k][+t.dataset.j];if(!r)return;
-if(t.dataset.q)r.q=Math.max(1,parseInt(t.value)||1);else if(t.dataset.s)r.s[t.dataset.s]=+t.value;render()})}
-function setLang(l){L=l;document.documentElement.lang=l;$("ha").textContent=tr("ha");$("hb").textContent=tr("hb");$("sa").placeholder=$("sb").placeholder=tr("ph");render()}
-$("lg").addEventListener("change",e=>setLang(e.target.value));
-setLang("en");
+const list=()=>{const q=inp.value.trim().toLowerCase();return ALL.map((x,i)=>i).filter(i=>match(ALL[i])&&(!q||ALL[i].n.toLowerCase().includes(q))).slice(0,30)};
+const show=()=>{dd.innerHTML=list().map(i=>`<div data-i="${i}" style="--tc:${TC(ALL[i])}">${tag(ALL[i])}<span class="dn">${esc(ALL[i].n)}<br><span class="mu">${tr("dem")} ${ALL[i].d}</span></span><b>${ALL[i].v<0?"?":fmt(ALL[i].v)}</b></div>`).join("")||`<div class="mu">${tr("none")}</div>`;dd.style.display="block"};
+const add=i=>{side[k].push({i,q:1,s:{DMG:0,SPA:0,RNG:0},o:0});inp.value="";dd.style.display="none";render()};
+inp.addEventListener("input",show);inp.addEventListener("focus",show);
+inp.addEventListener("keydown",e=>{if(e.key==="Enter"){const m=list();if(m.length)add(m[0])}});
+inp.addEventListener("blur",()=>{setTimeout(()=>dd.style.display="none",150)});
+dd.addEventListener("mousedown",e=>{const el=e.target.closest("[data-i]");if(!el)return;e.preventDefault();add(+el.dataset.i)})}
+function setLang(l){L=l;document.documentElement.lang=l;$("lg").value=l;
+$("nav-list").textContent=tr("nav_list");$("nav-calc").textContent=tr("nav_calc");$("list-q").placeholder=tr("list_ph");
+$("ha").textContent=$("bga").textContent=tr("ha");$("hb").textContent=$("bgb").textContent=tr("hb");
+$("sa").placeholder=$("sb").placeholder=tr("ph");$("hh").textContent=tr("hh");$("hclr").textContent=tr("clr");
+const IC={sw:'<path d="M7 7h12m0 0-3-3m3 3-3 3M17 17H5m0 0 3-3m-3 3 3 3"/>',sv:'<path d="M6 4h12v16l-6-4-6 4z"/>',cp:'<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h8"/>',rs:'<path d="M4 12a8 8 0 1 0 3-6.2M4 4v4h4"/>'};
+const ib=(k,i)=>`<span class="ic"><svg viewBox="0 0 24 24">${IC[i]}</svg></span><span class="lb">${tr(k)}</span>`;$("sw").innerHTML=ib("swap","sw");$("sv").innerHTML=ib("save","sv");$("cp").innerHTML=ib("copy","cp");$("rs").innerHTML=ib("reset","rs");
+[["sw","swap"],["sv","save"],["cp","copy"],["rs","reset"]].forEach(([i,k])=>$(i).setAttribute("aria-label",tr(k)));
+$("src").innerHTML=tr("src")+' <a href="https://docs.google.com/spreadsheets/d/1KTVAqVw26TkwJF7GGJmKjkVEXCK5itqS1OZAIpqxuJ0/htmlview?gid=883691415" target="_blank" rel="noopener">'+tr("lnk")+'</a>';
+fbar();render();hist();renderValueList();}
+const dl=()=>{for(const x of(navigator.languages||[navigator.language])){const c=(x||"").slice(0,2).toLowerCase();if(T[c])return c}return"en"};
+{const l=lsGet("aa_lang",null);setLang(T[l]?l:dl())}
 </script></body></html>
