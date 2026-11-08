@@ -1,4 +1,4 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html><html data-skin="cyan" data-look="neon"><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>AA Value Calculator</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=Figtree:wght@400;500;600;700&family=Dela+Gothic+One&family=Onest:wght@400;500;600;700&family=Pixelify+Sans:wght@500;700&family=JetBrains+Mono:wght@500;700&family=Nunito:wght@600;800&family=Manrope:wght@500;800&display=swap" rel="stylesheet">
@@ -111,6 +111,21 @@
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 .card:focus-within,.card.dd-open{position:relative;z-index:15}
 
+/* fix: the sticky trade bar was ~240px tall on desktop and covered the item lists.
+   On wide screens it now becomes one compact row (totals + meter, verdict, buttons). */
+@media(min-width:701px){
+:root:root:root .bar{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;padding:10px 16px;margin-top:14px}
+:root:root:root .bar .bal{flex:1 1 340px;min-width:0;grid-template-columns:auto minmax(110px,1fr) auto;gap:0 16px;align-items:center}
+:root:root:root .bar .bal .s.give{grid-area:1/1}
+:root:root:root .bar .bal .s.get{grid-area:1/3}
+:root:root:root .bar .vs{grid-area:1/2;margin:0}
+:root:root:root .bar .vd{margin:0;padding:6px 14px;font-size:13px;max-width:230px;white-space:normal;flex:none}
+:root:root:root .bar .acts{margin:0;flex:none}
+:root:root:root .bar .acts #sv{flex:none;padding:0 22px}
+}
+/* very short windows: don't pin the bar at all, so it can never hide the list */
+@media(max-height:520px){:root:root:root .bar{position:static}}
+
 </style>
 <div class="aura" aria-hidden="true"><i></i><i></i><i></i></div>
 <div class="wrap">
@@ -207,7 +222,7 @@ const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
 const pk=a=>a.map(r=>({n:ALL[r.i].n,c:ALL[r.i].c,q:r.q,s:{...r.s}}));
 const un=a=>(a||[]).map(x=>({i:ALL.findIndex(y=>y.n===x.n&&y.c===x.c),q:x.q||1,s:{DMG:0,SPA:0,RNG:0,...x.s},o:0})).filter(r=>r.i>=0);
 const THEMES=[["rose","th_rose",["#0d0610","#ff3d8b","#ff3b4e"]],["cyan","th_cyan",["#070a14","#29e1ff","#ff4f8b"]],["violet","th_violet",["#0b0816","#9b6bff","#3de8ff"]],["toxic","th_toxic",["#060c08","#3dff8a","#c6ff3d"]],["sunset","th_sunset",["#120a06","#ff9a3d","#ff3b6e"]],["ink-light","th_inkl",["#eef0f9","#ffcf3f","#ff6377"],"flat"],["ink-dark","th_inkd",["#13122a","#ffcf3f","#ff6377"],"flat"],["pixel","th_pixel",["#1a1035","#ffd23f","#ff4d6d"],"flat"],["term","th_term",["#030a06","#2bff88","#5cf0ff"],"flat"],["term-amber","th_terma",["#0a0602","#ffb01f","#ffe14a"],"flat"],["pastel","th_pastel",["#fff1f6","#ff8fb8","#7fd8b5"],"flat"],["min-light","th_minl",["#f6f6f7","#ff5a36","#111114"],"flat"],["min-dark","th_mind",["#0b0b0e","#ff6a45","#3dd68c"],"flat"]];
-let SKIN=lsGet("aa_skin","rose");if(!THEMES.some(t=>t[0]===SKIN))SKIN="rose";
+let SKIN=lsGet("aa_skin","cyan");if(!THEMES.some(t=>t[0]===SKIN))SKIN="cyan";
 const lk=id=>(THEMES.find(t=>t[0]===id)||[])[3]||"neon";
 document.documentElement.dataset.skin=SKIN;document.documentElement.dataset.look=lk(SKIN);
 const applySkin=v=>{SKIN=v;document.documentElement.dataset.skin=v;document.documentElement.dataset.look=lk(v);lsSet("aa_skin",v)};
@@ -239,7 +254,7 @@ document.addEventListener("click",e=>{
   const o=e.target.closest('[data-cs="o"]');
   if(o){const w=o.closest(".cs");csClose();csPick(w,o.dataset.v);return}
   const b=e.target.closest('[data-cs="b"]');
-  if(b){const w=b.parentNode,l=b.nextElementSibling,open=l.hidden;csClose(open?w:null);w.classList.remove("up");l.hidden=!open;b.setAttribute("aria-expanded",open?"true":"false");{const cd=w.closest(".card");if(cd)cd.classList.toggle("dd-open",open)}if(open){const br=$("view-calc").hidden?null:document.querySelector(".bar"),lim=(br?br.getBoundingClientRect().top:innerHeight)-8;if(l.getBoundingClientRect().bottom>lim)w.classList.add("up");const s=l.querySelector('[aria-selected="true"]');if(s)s.focus({preventScroll:true})}return}
+  if(b){const w=b.parentNode,l=b.nextElementSibling,open=l.hidden;csClose(open?w:null);w.classList.remove("up");l.hidden=!open;b.setAttribute("aria-expanded",open?"true":"false");{const cd=w.closest(".card");if(cd)cd.classList.toggle("dd-open",open)}if(open){const br=$("view-calc").hidden?null:document.querySelector(".bar"),lim=(br?br.getBoundingClientRect().top:innerHeight)-8;{const br2=b.getBoundingClientRect();if(l.getBoundingClientRect().bottom>lim&&br2.top-8>lim-br2.bottom)w.classList.add("up")}const s=l.querySelector('[aria-selected="true"]');if(s)s.focus({preventScroll:true})}return}
   csClose()});
 document.addEventListener("keydown",e=>{
   if(e.key==="Escape"){const l=document.querySelector(".cs-l:not([hidden])");if(l){const b=l.previousElementSibling;csClose();b.focus()}return}
@@ -368,8 +383,8 @@ const show=()=>{dd.innerHTML=list().map(i=>`<div data-i="${i}">${tag(ALL[i])}<sp
 const add=i=>{side[k].push({i,q:1,s:{DMG:0,SPA:0,RNG:0},o:0,n:1});inp.value="";dd.style.display="none";if(matchMedia("(max-width:700px)").matches)inp.blur();render()};
 inp.addEventListener("input",show);inp.addEventListener("focus",show);
 inp.addEventListener("keydown",e=>{if(e.key==="Enter"){const m=list();if(m.length)add(m[0])}});
-inp.addEventListener("blur",()=>{setTimeout(()=>dd.style.display="none",150)});
-dd.addEventListener("mousedown",e=>{const el=e.target.closest("[data-i]");if(!el)return;e.preventDefault();add(+el.dataset.i)})}
+inp.addEventListener("blur",()=>{dd.style.display="none"});
+dd.addEventListener("mousedown",e=>{e.preventDefault();const el=e.target.closest("[data-i]");if(el)add(+el.dataset.i)})}
 document.addEventListener("focusin",e=>{if(e.target.matches&&e.target.matches("input")&&e.target.closest("#view-calc"))document.body.classList.add("typing")});
 document.addEventListener("focusout",()=>setTimeout(()=>{const a=document.activeElement;if(!(a&&a.matches&&a.matches("input")&&a.closest("#view-calc")))document.body.classList.remove("typing")},60));
 function setLang(l){L=l;document.documentElement.lang=l;csFill($("th"),themeOpts(),SKIN,tr("th_lbl"));csFill($("lg"),[["en","English"],["ru","Русский"],["uk","Українська"]],l,tr("lang_lbl"));
